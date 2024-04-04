@@ -19,7 +19,9 @@ import ch.qos.logback.classic.Level;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.unboundid.asn1.ASN1GeneralizedTime;
 import com.unboundid.ldap.sdk.Entry;
+import java.util.List;
 import l9g.app.ldap2moodle.LogbackConfig;
+import l9g.app.ldap2moodle.client.MoodleService;
 import l9g.app.ldap2moodle.engine.JavaScriptEngine;
 import l9g.app.ldap2moodle.handler.LdapHandler;
 import l9g.app.ldap2moodle.handler.MoodleHandler;
@@ -38,7 +40,7 @@ import org.springframework.shell.command.annotation.Command;
 @Command(group = "Test")
 public class TestCommands
 {
-  private final static Logger LOGGER 
+  private final static Logger LOGGER
     = LoggerFactory.getLogger(TestCommands.class);
 
   @Autowired
@@ -49,6 +51,9 @@ public class TestCommands
 
   @Autowired
   private LogbackConfig logbackConfig;
+
+  @Autowired
+  private MoodleService moodleService;
 
   @Command(alias = "t1", description = "test javascipt file with ldap data")
   public void testJavaScript() throws Throwable
@@ -104,12 +109,12 @@ public class TestCommands
     LOGGER.error("ERROR");
 
     logbackConfig.getL9gLogger().setLevel(Level.INFO);
-    
+
     LOGGER.info("INFO");
-    LOGGER.info( logbackConfig.getNotificationMarker(),
+    LOGGER.info(logbackConfig.getNotificationMarker(),
       "This is a test notification INFO mail.");
   }
-  
+
   @Command(alias = "t4", description = "read all moodle users")
   public void testReadAllMoodleUsers() throws Throwable
   {
@@ -117,6 +122,20 @@ public class TestCommands
     LOGGER.debug("testReadAllMoodleUsers");
     moodleHandler.readMoodleUsers();
     moodleHandler.getMoodleUsersList()
-      .forEach( entry -> System.out.println(entry.toString()));
+      .forEach(entry -> System.out.println(entry.toString()));
+  }
+
+  @Command(alias = "t5", description = "test UriComponentsBuilder")
+  public void testUriComponentsBuilder() throws Throwable
+  {
+    logbackConfig.getL9gLogger().setLevel(Level.DEBUG);
+    LOGGER.debug("testUriComponentsBuilder");
+
+    List<MoodleUser> users = moodleService.users();
+    if ( users != null )
+    {
+      users.forEach(entry->System.out.println(entry));
+    }
+    
   }
 }

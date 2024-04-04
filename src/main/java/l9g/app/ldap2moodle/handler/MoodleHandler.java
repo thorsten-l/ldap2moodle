@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import l9g.app.ldap2moodle.client.MoodleClient;
+import l9g.app.ldap2moodle.client.MoodleService;
 import l9g.app.ldap2moodle.model.MoodleUsersResponse;
 
 /**
@@ -39,7 +40,7 @@ import l9g.app.ldap2moodle.model.MoodleUsersResponse;
 @Component
 public class MoodleHandler
 {
-  private final static Logger LOGGER 
+  private final static Logger LOGGER
     = LoggerFactory.getLogger(MoodleHandler.class);
 
   @Autowired
@@ -47,7 +48,10 @@ public class MoodleHandler
 
   @Autowired
   private MoodleClient moodleClient;
-  
+
+  @Autowired
+  private MoodleService moodleService;
+
   @Bean
   public MoodleHandler moodleHandlerBean()
   {
@@ -78,11 +82,15 @@ public class MoodleHandler
   public void readMoodleUsers()
   {
     LOGGER.debug("readMoodleUsers");
-    
-    MoodleUsersResponse response = moodleClient.users();
-    moodleUsersList = response.getUsers();
-    moodleUsersMap.clear();
-    moodleUsersList.forEach(user -> moodleUsersMap.put(user.getUsername(), user));
+
+    moodleUsersList = moodleService.users();
+
+    if (moodleUsersList != null)
+    {
+      moodleUsersMap.clear();
+      moodleUsersList.
+        forEach(user -> moodleUsersMap.put(user.getUsername(), user));
+    }
   }
 
   public MoodleUser createUser(MoodleUser user)

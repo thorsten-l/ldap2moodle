@@ -23,6 +23,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.shell.command.annotation.CommandScan;
 import org.springframework.shell.jline.PromptProvider;
+import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
 @CommandScan
@@ -45,6 +46,8 @@ public class Application
 
   public static void main(String[] args)
   {
+    System.out.println("*** start");
     SpringApplication.run(Application.class, args);
+    System.out.println("*** end");
   }
 }
