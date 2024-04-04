@@ -124,18 +124,4 @@ public class TestCommands
     moodleHandler.getMoodleUsersList()
       .forEach(entry -> System.out.println(entry.toString()));
   }
-
-  @Command(alias = "t5", description = "test UriComponentsBuilder")
-  public void testUriComponentsBuilder() throws Throwable
-  {
-    logbackConfig.getL9gLogger().setLevel(Level.DEBUG);
-    LOGGER.debug("testUriComponentsBuilder");
-
-    List<MoodleUser> users = moodleService.users();
-    if ( users != null )
-    {
-      users.forEach(entry->System.out.println(entry));
-    }
-    
-  }
 }
