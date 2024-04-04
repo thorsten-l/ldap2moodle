@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package l9g.app.ldap2moodle.client;
+package l9g.app.ldap2moodle.services;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import l9g.app.ldap2moodle.Config;
 import l9g.app.ldap2moodle.handler.CryptoHandler;
+import l9g.app.ldap2moodle.model.MoodleAnonymousUser;
+import l9g.app.ldap2moodle.model.MoodleRole;
 import l9g.app.ldap2moodle.model.MoodleUser;
 import l9g.app.ldap2moodle.model.MoodleUsersResponse;
 import org.slf4j.Logger;
@@ -68,7 +71,7 @@ public class MoodleService
     {
       parameters.forEach((key, value) ->
       {
-        builder.queryParam(key,value);
+        builder.queryParam(key, value);
       });
     }
 
@@ -98,5 +101,29 @@ public class MoodleService
     }
 
     return result;
+  }
+
+  // TODO: ...
+  public List<MoodleRole> roles()
+  {
+    return new ArrayList<MoodleRole>();
+  }
+
+  // TODO: ...
+  public MoodleUser usersCreate(MoodleUser user)
+  {
+    return user;
+  }
+
+  // TODO: ...
+  public MoodleUser usersUpdate(int id, MoodleUser user)
+  {
+    return user;
+  }
+
+  // TODO: ...
+  public MoodleUser usersAnonymize(int id, MoodleAnonymousUser user)
+  {
+    return null;
   }
 }

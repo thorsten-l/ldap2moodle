@@ -29,9 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
-import l9g.app.ldap2moodle.client.MoodleClient;
-import l9g.app.ldap2moodle.client.MoodleService;
-import l9g.app.ldap2moodle.model.MoodleUsersResponse;
+import l9g.app.ldap2moodle.services.MoodleService;
 
 /**
  *
@@ -45,9 +43,6 @@ public class MoodleHandler
 
   @Autowired
   private Config config;
-
-  @Autowired
-  private MoodleClient moodleClient;
 
   @Autowired
   private MoodleService moodleService;
@@ -64,7 +59,7 @@ public class MoodleHandler
     LOGGER.debug("getAdminGroupId");
     int adminGroupId = -1;
 
-    List<MoodleRole> roles = moodleClient.roles();
+    List<MoodleRole> roles = moodleService.roles();
 
     for (MoodleRole role : roles)
     {
@@ -104,7 +99,7 @@ public class MoodleHandler
       LOGGER.debug("CREATE: " + user);
       try
       {
-        user = moodleClient.usersCreate(user);
+        user = moodleService.usersCreate(user);
       }
       catch (Throwable t)
       {
@@ -126,7 +121,7 @@ public class MoodleHandler
       try
       {
         LOGGER.debug("UPDATE: " + objectMapper.writeValueAsString(user));
-        user = moodleClient.usersUpdate(user.getId(), user);
+        user = moodleService.usersUpdate(user.getId(), user);
       }
       catch (Throwable t)
       {
@@ -148,8 +143,8 @@ public class MoodleHandler
       LOGGER.debug("DELETE: " + user);
       try
       {
-        // moodleClient.usersDelete(user.getId());
-        moodleClient.usersAnonymize(user.getId(),
+        // moodleService.usersDelete(user.getId());
+        moodleService.usersAnonymize(user.getId(),
           new MoodleAnonymousUser(user.getUsername()));
       }
       catch (Throwable t)
