@@ -106,7 +106,7 @@ public class MoodleService
   // TODO: ...
   public List<MoodleRole> roles()
   {
-    return new ArrayList<MoodleRole>();
+    return new ArrayList<>();
   }
 
   // TODO: ...
