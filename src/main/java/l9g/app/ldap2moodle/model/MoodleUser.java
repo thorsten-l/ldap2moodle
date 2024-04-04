@@ -45,4 +45,34 @@ public class MoodleUser
   private String fullname;
 
   private String email;
+
+  private String department;
+
+  private int firstaccess;
+
+  private int lastaccess;
+
+  private String auth;
+
+  private boolean suspended;
+
+  private boolean confirmed;
+
+  private String lang;
+
+  private String theme;
+
+  private String timezone;
+
+  private int mailformat;
+
+  private String description;
+
+  private int descriptionformat;
+
+  private String country;
+
+  private String profileimageurlsmall;
+
+  private String profileimageurl;
 }
