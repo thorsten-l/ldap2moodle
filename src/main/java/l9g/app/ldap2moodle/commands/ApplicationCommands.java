@@ -18,7 +18,6 @@ package l9g.app.ldap2moodle.commands;
 import ch.qos.logback.classic.Level;
 import com.unboundid.asn1.ASN1GeneralizedTime;
 import com.unboundid.ldap.sdk.Entry;
-import java.util.List;
 import l9g.app.ldap2moodle.Config;
 import l9g.app.ldap2moodle.LogbackConfig;
 import l9g.app.ldap2moodle.TimestampUtil;
@@ -112,7 +111,7 @@ public class ApplicationCommands
           // DELETE
           moodleHandler.deleteUser(user);
         }
-*/
+         */
       }
     }
 

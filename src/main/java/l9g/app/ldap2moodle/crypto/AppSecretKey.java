@@ -39,7 +39,7 @@ public class AppSecretKey
   private final static Logger LOGGER = LoggerFactory.getLogger(
     AppSecretKey.class.getName());
 
-  private final static String SECRET_FILE 
+  private final static String SECRET_FILE
     = Application.CONFIG_PATH + "secret.bin";
 
   public AppSecretKey()

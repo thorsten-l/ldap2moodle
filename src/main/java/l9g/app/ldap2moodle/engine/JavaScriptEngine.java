@@ -33,12 +33,12 @@ import org.slf4j.LoggerFactory;
  */
 public class JavaScriptEngine implements Closeable
 {
-  private final static Logger LOGGER 
+  private final static Logger LOGGER
     = LoggerFactory.getLogger(JavaScriptEngine.class);
 
   private final static String SCRIPT_TYPE = "js";
 
-  private final static String SCRIPT_FILENAME 
+  private final static String SCRIPT_FILENAME
     = Application.CONFIG_PATH + "ldap2moodle.js";
 
   public JavaScriptEngine() throws IOException

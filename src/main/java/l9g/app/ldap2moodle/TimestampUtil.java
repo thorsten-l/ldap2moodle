@@ -36,14 +36,14 @@ public class TimestampUtil
 
   private static final String TIMESTAMP_FILENAME = "lastsync.timestamp";
 
-  private static final String VAR_DIRECTORY_NAME 
+  private static final String VAR_DIRECTORY_NAME
     = Application.CONFIG_PATH + "var";
 
   public TimestampUtil(String prefix)
   {
     currentTimestamp = new ASN1GeneralizedTime();
     this.prefix = prefix;
-    
+
     if (System.getProperty("app.home") != null)
     {
       varDirectory = new File(System.getProperty("app.home")

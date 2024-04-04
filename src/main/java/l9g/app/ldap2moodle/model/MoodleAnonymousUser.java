@@ -31,11 +31,11 @@ import lombok.ToString;
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public class MoodleAnonymousUser
 {
-  public MoodleAnonymousUser( String login )
+  public MoodleAnonymousUser(String login)
   {
     this.login = this.firstname = this.lastname = login;
     this.email = login + "@anonymous.net";
-    this.department = this.fax = this.mobile 
+    this.department = this.fax = this.mobile
       = this.note = this.phone = this.web = "";
   }
 
@@ -80,11 +80,11 @@ public class MoodleAnonymousUser
   private Date out_of_office_end_at;
 
   private Integer out_of_office_replacement_id;
- 
+
   private MoodlePreferences preferences;
 
   private List<String> roles;
-  
+
   private List<Integer> role_ids;
 
   private List<Integer> organization_ids;

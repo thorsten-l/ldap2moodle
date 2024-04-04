@@ -19,7 +19,6 @@ import ch.qos.logback.classic.Level;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.unboundid.asn1.ASN1GeneralizedTime;
 import com.unboundid.ldap.sdk.Entry;
-import java.util.List;
 import l9g.app.ldap2moodle.LogbackConfig;
 import l9g.app.ldap2moodle.services.MoodleService;
 import l9g.app.ldap2moodle.engine.JavaScriptEngine;

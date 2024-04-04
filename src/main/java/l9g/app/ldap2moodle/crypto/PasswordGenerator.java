@@ -33,8 +33,9 @@ public class PasswordGenerator
   };
 
   private final static PasswordGenerator SINGLETON = new PasswordGenerator();
+
   private final Random random;
-  
+
   private PasswordGenerator()
   {
     random = new Random(System.currentTimeMillis());
@@ -43,13 +44,12 @@ public class PasswordGenerator
   public static String generate(int length)
   {
     char[] pwd = new char[length];
-    
-    for( int i=0; i<length; i++ )
+
+    for (int i = 0; i < length; i++)
     {
       pwd[i] = PWCHARS[SINGLETON.random.nextInt(PWCHARS.length)];
     }
-    
+
     return String.valueOf(pwd);
   }
 }
-

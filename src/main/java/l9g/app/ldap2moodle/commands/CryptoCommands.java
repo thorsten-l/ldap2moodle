@@ -31,7 +31,7 @@ import org.springframework.shell.command.annotation.Option;
 @Command(group = "Crypto")
 public class CryptoCommands
 {
-  private final static Logger LOGGER 
+  private final static Logger LOGGER
     = LoggerFactory.getLogger(CryptoCommands.class);
 
   @Autowired
@@ -44,7 +44,8 @@ public class CryptoCommands
   {
     LOGGER.debug("encrypt");
     System.out.println("text = \"" + text + "\"");
-    System.out.println("encrypted text = \"" + cryptoHandler.encrypt(text) + "\"");
+    System.out.println("encrypted text = \"" + cryptoHandler.encrypt(text)
+      + "\"");
   }
 
   @Command(description = "decrypt encrypted text")
@@ -58,14 +59,13 @@ public class CryptoCommands
       + cryptoHandler.decrypt(encrypted) + "\"");
   }
 
-  
-  @Command(alias="pwgen", description = "create random passwords")
+  @Command(alias = "pwgen", description = "create random passwords")
   public void passwordGenerator(
     @Option(description = "number of chars", required = true) int length)
     throws Throwable
   {
     LOGGER.debug("passwordGenerator");
-    System.out.println( "random password");
+    System.out.println("random password");
     encrypt(PasswordGenerator.generate(length));
   }
 }

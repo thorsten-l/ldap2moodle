@@ -45,7 +45,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class LdapHandler
 {
-  private final static Logger LOGGER 
+  private final static Logger LOGGER
     = LoggerFactory.getLogger(LdapHandler.class);
 
   @Autowired
@@ -67,8 +67,8 @@ public class LdapHandler
     LOGGER.debug("port = " + config.getLdapPort());
     LOGGER.debug("ssl = " + config.isLdapSslEnabled());
     LOGGER.debug("bind dn = " + config.getLdapBindDn());
-    LOGGER.trace("bind pw = " + 
-      cryptoHandler.decrypt(config.getLdapBindPassword()));
+    LOGGER.trace("bind pw = " + cryptoHandler.decrypt(config.
+      getLdapBindPassword()));
 
     LDAPConnection ldapConnection;
 
