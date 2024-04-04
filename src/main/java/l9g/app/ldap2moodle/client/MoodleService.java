@@ -56,7 +56,7 @@ public class MoodleService
   }
 
   private URI uriBuilder(String wsfunction,
-    LinkedHashMap<String, String> criterias)
+    LinkedHashMap<String, String> parameters)
   {
     UriComponentsBuilder builder = UriComponentsBuilder
       .fromHttpUrl(config.getMoodleBaseUrl())
@@ -64,14 +64,11 @@ public class MoodleService
       .queryParam("moodlewsrestformat", "json")
       .queryParam("wsfunction", wsfunction);
 
-    if (criterias != null && !criterias.isEmpty())
+    if (parameters != null && !parameters.isEmpty())
     {
-      final Counter c = new Counter();
-      criterias.forEach((key, value) ->
+      parameters.forEach((key, value) ->
       {
-        builder.queryParam("criteria[" + c.counter + "][key]", key);
-        builder.queryParam("criteria[" + c.counter + "][value]", value);
-        c.increment();
+        builder.queryParam(key,value);
       });
     }
 
@@ -86,7 +83,8 @@ public class MoodleService
     List<MoodleUser> result = null;
 
     LinkedHashMap<String, String> criterias = new LinkedHashMap<>();
-    criterias.put("email", "%");
+    criterias.put("criteria[0][key]", "email");
+    criterias.put("criteria[0][value]", "%");
 
     ResponseEntity<MoodleUsersResponse> response
       = restTemplate.getForEntity(
@@ -101,15 +99,4 @@ public class MoodleService
 
     return result;
   }
-
-  class Counter
-  {
-    public int counter = 0;
-
-    public int increment()
-    {
-      return counter++;
-    }
-  }
-
 }
