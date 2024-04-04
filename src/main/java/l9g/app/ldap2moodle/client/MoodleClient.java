@@ -45,8 +45,9 @@ public interface MoodleClient
   @GetExchange("/api/v1/roles")
   public List<MoodleRole> roles();
 
-  @GetExchange("?wstoken={wstoken}&moodlewsrestformat=json&wsfunction=core_user_get_users&criteria[0][key]=email&criteria[0][value]=%")
-  public MoodleUsersResponse users(@PathVariable("wstoken") String wstoken);
+  @GetExchange(
+    "?wstoken={wstoken}&moodlewsrestformat={moodlewsrestformat}&wsfunction=core_user_get_users&criteria[0][key]=email&criteria[0][value]=%")
+  public MoodleUsersResponse users();
 
   /*
   Query Parameters

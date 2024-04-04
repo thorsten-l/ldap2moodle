@@ -48,9 +48,6 @@ public class MoodleHandler
   @Autowired
   private MoodleClient moodleClient;
   
-  @Autowired
-  private CryptoHandler cryptoHandler;
-  
   @Bean
   public MoodleHandler moodleHandlerBean()
   {
@@ -82,7 +79,7 @@ public class MoodleHandler
   {
     LOGGER.debug("readMoodleUsers");
     
-    MoodleUsersResponse response = moodleClient.users(cryptoHandler.decrypt(config.getMoodleToken()));
+    MoodleUsersResponse response = moodleClient.users();
     moodleUsersList = response.getUsers();
     moodleUsersMap.clear();
     moodleUsersList.forEach(user -> moodleUsersMap.put(user.getUsername(), user));

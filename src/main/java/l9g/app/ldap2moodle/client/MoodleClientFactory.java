@@ -78,11 +78,11 @@ public class MoodleClientFactory
       .baseUrl(config.getMoodleBaseUrl())
       .defaultUriVariables(defaultUriVariables)
       .build();
-
+    
     HttpServiceProxyFactory factory
       = HttpServiceProxyFactory.builder(
         WebClientAdapter.forClient(webClient)).build();
-
+    
     return factory.createClient(MoodleClient.class);
   }
 }
