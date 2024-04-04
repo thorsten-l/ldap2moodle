@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import l9g.app.ldap2moodle.client.MoodleClient;
+import l9g.app.ldap2moodle.model.MoodleUsersResponse;
 
 /**
  *
@@ -46,7 +47,10 @@ public class MoodleHandler
 
   @Autowired
   private MoodleClient moodleClient;
-
+  
+  @Autowired
+  private CryptoHandler cryptoHandler;
+  
   @Bean
   public MoodleHandler moodleHandlerBean()
   {
@@ -77,9 +81,11 @@ public class MoodleHandler
   public void readMoodleUsers()
   {
     LOGGER.debug("readMoodleUsers");
-    moodleUsersList = moodleClient.users();
+    
+    MoodleUsersResponse response = moodleClient.users(cryptoHandler.decrypt(config.getMoodleToken()));
+    moodleUsersList = response.getUsers();
     moodleUsersMap.clear();
-    moodleUsersList.forEach(user -> moodleUsersMap.put(user.getLogin(), user));
+    moodleUsersList.forEach(user -> moodleUsersMap.put(user.getUsername(), user));
   }
 
   public MoodleUser createUser(MoodleUser user)
@@ -139,7 +145,7 @@ public class MoodleHandler
       {
         // moodleClient.usersDelete(user.getId());
         moodleClient.usersAnonymize(user.getId(),
-          new MoodleAnonymousUser(user.getLogin()));
+          new MoodleAnonymousUser(user.getUsername()));
       }
       catch (Throwable t)
       {

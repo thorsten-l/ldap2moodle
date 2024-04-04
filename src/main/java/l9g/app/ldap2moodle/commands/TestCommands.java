@@ -22,6 +22,7 @@ import com.unboundid.ldap.sdk.Entry;
 import l9g.app.ldap2moodle.LogbackConfig;
 import l9g.app.ldap2moodle.engine.JavaScriptEngine;
 import l9g.app.ldap2moodle.handler.LdapHandler;
+import l9g.app.ldap2moodle.handler.MoodleHandler;
 import l9g.app.ldap2moodle.model.MoodleAnonymousUser;
 import l9g.app.ldap2moodle.model.MoodleUser;
 import org.slf4j.Logger;
@@ -44,6 +45,9 @@ public class TestCommands
   private LdapHandler ldapHandler;
 
   @Autowired
+  private MoodleHandler moodleHandler;
+
+  @Autowired
   private LogbackConfig logbackConfig;
 
   @Command(alias = "t1", description = "test javascipt file with ldap data")
@@ -62,7 +66,7 @@ public class TestCommands
         Entry entry = ldapHandler.getLdapEntryMap().get(login);
         System.out.println("\n" + entry);
         MoodleUser user = new MoodleUser();
-        user.setLogin(login);
+        user.setUsername(login);
         js.getValue().executeVoid("test", user, entry);
         System.out.println(objectMapper.writeValueAsString(user));
       }
@@ -104,5 +108,15 @@ public class TestCommands
     LOGGER.info("INFO");
     LOGGER.info( logbackConfig.getNotificationMarker(),
       "This is a test notification INFO mail.");
+  }
+  
+  @Command(alias = "t4", description = "read all moodle users")
+  public void testReadAllMoodleUsers() throws Throwable
+  {
+    logbackConfig.getL9gLogger().setLevel(Level.DEBUG);
+    LOGGER.debug("testReadAllMoodleUsers");
+    moodleHandler.readMoodleUsers();
+    moodleHandler.getMoodleUsersList()
+      .forEach( entry -> System.out.println(entry.toString()));
   }
 }

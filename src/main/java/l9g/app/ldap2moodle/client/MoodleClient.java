@@ -22,6 +22,7 @@ import l9g.app.ldap2moodle.model.MoodleGroup;
 import l9g.app.ldap2moodle.model.MoodleOrganization;
 import l9g.app.ldap2moodle.model.MoodleRole;
 import l9g.app.ldap2moodle.model.MoodleUser;
+import l9g.app.ldap2moodle.model.MoodleUsersResponse;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.service.annotation.DeleteExchange;
@@ -44,8 +45,8 @@ public interface MoodleClient
   @GetExchange("/api/v1/roles")
   public List<MoodleRole> roles();
 
-  @GetExchange("/api/v1/users")
-  public List<MoodleUser> users();
+  @GetExchange("?wstoken={wstoken}&moodlewsrestformat=json&wsfunction=core_user_get_users&criteria[0][key]=email&criteria[0][value]=%")
+  public MoodleUsersResponse users(@PathVariable("wstoken") String wstoken);
 
   /*
   Query Parameters

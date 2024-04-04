@@ -17,6 +17,9 @@ package l9g.app.ldap2moodle.client;
 
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 import javax.net.ssl.SSLException;
 import l9g.app.ldap2moodle.Config;
 import l9g.app.ldap2moodle.handler.CryptoHandler;
@@ -29,6 +32,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
+import org.springframework.web.util.UriBuilder;
+import org.springframework.web.util.UriBuilderFactory;
 import reactor.netty.http.client.HttpClient;
 
 /**
@@ -65,10 +70,13 @@ public class MoodleClientFactory
         .clientConnector(new ReactorClientHttpConnector(httpClient));
     }
 
+    HashMap<String,String> defaultUriVariables = new HashMap<>();
+    defaultUriVariables.put("wstoken", cryptoHandler.decrypt(config.getMoodleToken()));
+    defaultUriVariables.put("moodlewsrestformat", "json");
+    
     WebClient webClient = webClientBuilder
       .baseUrl(config.getMoodleBaseUrl())
-      .defaultHeader("Authorization",
-        "Token token=" + cryptoHandler.decrypt(config.getMoodleToken()))
+      .defaultUriVariables(defaultUriVariables)
       .build();
 
     HttpServiceProxyFactory factory

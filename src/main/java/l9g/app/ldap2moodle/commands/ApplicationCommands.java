@@ -95,15 +95,16 @@ public class ApplicationCommands
     ldapHandler.readAllLdapEntryUIDs();
     for (MoodleUser user : moodleHandler.getMoodleUsersList())
     {
-      if (!ldapHandler.getLdapEntryMap().containsKey(user.getLogin()))
+      if (!ldapHandler.getLdapEntryMap().containsKey(user.getUsername()))
       {
+        /*
         List<Integer> roleIds = user.getRole_ids();
 
         if (user.getId() == 1 || roleIds.contains(adminGroupId))
         {
           // IGNORE Admin Users
           LOGGER.warn("IGNORE DELETE ADMIN: {}, {} {} ({})",
-            user.getLogin(), user.getFirstname(),
+            user.getUsername(), user.getFirstname(),
             user.getLastname(), user.getEmail());
         }
         else
@@ -111,6 +112,7 @@ public class ApplicationCommands
           // DELETE
           moodleHandler.deleteUser(user);
         }
+*/
       }
     }
 
@@ -141,10 +143,11 @@ public class ApplicationCommands
         MoodleUser moodleUser = moodleHandler.getMoodleUsersMap().get(login);
         MoodleUser updateUser = new MoodleUser();
         updateUser.setId(moodleUser.getId());
-        updateUser.setLogin(login);
+        updateUser.setUsername(login);
 
         if (moodleUser != null)
         {
+          /*
           List<Integer> roleIds
             = moodleHandler.getMoodleUsersMap().get(login).getRole_ids();
 
@@ -162,7 +165,7 @@ public class ApplicationCommands
             // UPDATE
             js.getValue().executeVoid("update", updateUser, entry);
             moodleHandler.updateUser(updateUser);
-          }
+          }*/
         }
         else
         {

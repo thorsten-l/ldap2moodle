@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Thorsten Ludewig (t.ludewig@gmail.com).
+ * Copyright 2024 Thorsten Ludewig (t.ludewig@gmail.com).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,8 @@ package l9g.app.ldap2moodle.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 
 /**
@@ -31,21 +27,11 @@ import lombok.ToString;
  */
 @ToString
 @Getter
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class MoodleUser
+public class MoodleUsersResponse
 {
-  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-  private Integer id;
+  private List<MoodleUser> users;
 
-  private String username;
-
-  private String firstname;
-
-  private String lastname;
-
-  private String fullname;
-
-  private String email;
+  private List<String> warnings;
 }
