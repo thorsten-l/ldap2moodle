@@ -69,10 +69,7 @@ public class MoodleService
 
     if (parameters != null && !parameters.isEmpty())
     {
-      parameters.forEach((key, value) ->
-      {
-        builder.queryParam(key, value);
-      });
+      parameters.forEach((key, value) -> builder.queryParam(key, value));
     }
 
     UriComponents uriComponents = builder.build().encode();
