@@ -159,9 +159,16 @@ public class LdapHandler
         {
           for (Entry entry : sourceSearchResult.getSearchEntries())
           {
-            ldapEntryMap.put(
-              entry.getAttributeValue(
-                config.getLdapUserId()).trim().toLowerCase(), entry);
+            if (entry.getAttributeValue(config.getLdapUserId()) == null)
+            {
+              LOGGER.error("attribute " + config.getLdapUserId() + " is missing in ldap entry");
+            }
+            else
+            {
+              ldapEntryMap.put(
+                  entry.getAttributeValue(
+                      config.getLdapUserId()).trim().toLowerCase(), entry);
+            }
           }
 
           responseControl = SimplePagedResultsControl.get(sourceSearchResult);
