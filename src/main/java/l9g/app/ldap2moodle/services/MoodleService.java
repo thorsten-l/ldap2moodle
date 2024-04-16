@@ -187,20 +187,22 @@ public class MoodleService
     list.add( user );
     UsersCreateRequest payload = new UsersCreateRequest(list);    
     
-    WebClient webClient = WebClient.create(); 
+    WebClient webClient = WebClient.create();
+    String path = config.getMoodleBaseUrl() + "/webservice/rest/server.php";
+    LOGGER.debug(path);
     Mono<ResponseEntity<String>> response = webClient.post()
       .uri(uriBuilder -> 
-          uriBuilder.path(config.getMoodleBaseUrl() + "/webservice/rest/server.php")
+          uriBuilder.path(path)
             .queryParam("wstoken", wstoken)
             .queryParam("moodlewsrestformat", "json")
             .queryParam("wsfunction", "core_user_create_users")
             .build()
       )
-      .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)      
+      .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
       .body(Mono.just(payload), UsersCreateRequest.class)      
       .retrieve()
-      .toEntity(String.class);      
-      
+      .toEntity(String.class);
+
 //      .bodyToMono(String.class);
 //    ResponseEntity<String> block = response.block();
 //    LOGGER.debug( block.toString());
