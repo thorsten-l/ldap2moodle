@@ -58,11 +58,17 @@ public class MoodleService
     this.config = config;
   }
 
+  /**
+   * create URI with parameters
+   * @param wsfunction
+   * @param parameters
+   * @return Uri object
+   */
   private URI uriBuilder(String wsfunction,
     LinkedHashMap<String, String> parameters)
   {
     UriComponentsBuilder builder = UriComponentsBuilder
-      .fromHttpUrl(config.getMoodleBaseUrl())
+      .fromHttpUrl(config.getMoodleBaseUrl() + "/webservice/rest/server.php")
       .queryParam("wstoken", wstoken)
       .queryParam("moodlewsrestformat", "json")
       .queryParam("wsfunction", wsfunction);
@@ -78,6 +84,11 @@ public class MoodleService
     return uriComponents.toUri();
   }
 
+  /**
+   * get all users authenticated by LDAP/OICD from Moodle
+   * 
+   * @return 
+   */
   public List<MoodleUser> users()
   {
     List<MoodleUser> result = null;
