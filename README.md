@@ -2,6 +2,12 @@
 
 Create, update and delete moodle user entries from a selected LDAP directory server.
 
+## Installation
+
+* enable moodle webservice for REST protocol
+
+https://docs.moodle.org/403/en/Using_web_services
+
 ## LDAP to Moodle attribute mapping
 
 The mapping will be done within a JavaScript function.

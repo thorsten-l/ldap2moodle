@@ -45,6 +45,8 @@ public class MoodleUser
   private String fullname;
 
   private String email;
+  
+  private String idnumber;
 
   private String department;
 
@@ -75,4 +77,18 @@ public class MoodleUser
   private String profileimageurlsmall;
 
   private String profileimageurl;
+  
+  
+  // custom fields
+  /*
+  private String ou;
+  private String faculty2;
+  private String employeetype;  
+*/
+  /*
+  customfields][0][type]= string
+  customfields][0][value]= string
+
+  */
+  
 }

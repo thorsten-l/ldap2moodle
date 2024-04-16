@@ -141,11 +141,12 @@ public class ApplicationCommands
         String login = entry.getAttributeValue(config.getLdapUserId());
         MoodleUser moodleUser = moodleHandler.getMoodleUsersMap().get(login);
         MoodleUser updateUser = new MoodleUser();
-        updateUser.setId(moodleUser.getId());
-        updateUser.setUsername(login);
 
         if (moodleUser != null)
         {
+          updateUser.setId(moodleUser.getId());
+          updateUser.setUsername(login);
+          
           /*
           List<Integer> roleIds
             = moodleHandler.getMoodleUsersMap().get(login).getRole_ids();

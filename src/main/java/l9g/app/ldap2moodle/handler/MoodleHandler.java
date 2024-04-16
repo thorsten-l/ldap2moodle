@@ -99,7 +99,7 @@ public class MoodleHandler
       LOGGER.debug("CREATE: " + user);
       try
       {
-        user = moodleService.usersCreate(user);
+        moodleService.usersCreate(user);
       }
       catch (Throwable t)
       {
@@ -107,7 +107,7 @@ public class MoodleHandler
       }
     }
 
-    return user;
+    return null; // user;
   }
 
   public MoodleUser updateUser(MoodleUser user)
