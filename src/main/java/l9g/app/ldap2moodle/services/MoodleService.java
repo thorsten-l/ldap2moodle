@@ -15,6 +15,7 @@
  */
 package l9g.app.ldap2moodle.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.handler.logging.LogLevel;
 import java.net.URI;
 import java.time.Duration;
@@ -224,11 +225,9 @@ public class MoodleService
         .queryParam( "moodlewsrestformat", "json" )
         .queryParam( "wsfunction", "core_user_create_users" )
         .build() )
-      // .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
       .accept( MediaType.APPLICATION_JSON )
       .contentType( MediaType.APPLICATION_JSON )
-      //      .body(Mono.just(payload), UsersCreateRequest.class)      
-      .body( BodyInserters.fromValue( payload ) )
+      .bodyValue( payload ) // BodyInserters.fromValue( payload ) )
       .exchangeToMono( response ->
       {
         LOGGER.info( response.toString() );
@@ -245,31 +244,23 @@ public class MoodleService
         }
       } );
     String body = response1.block();
-    
+
     LOGGER.info( body );
 
-//      .toEntity(String.class);
-//      .bodyToMono(String.class);
-//    ResponseEntity<String> block = response.block();
-//    LOGGER.debug( block.toString());
-    // LOGGER.info( response1.toString() );
-
-    /*    
-    ResponseEntity<UsersCreateResponse> response
-      = restTemplate.postForEntity(
-        uriBuilder("core_user_create_users", criteria), request,
-        UsersCreateResponse.class);
-    if (response != null && response.getBody() != null
-      && response.getStatusCode() == HttpStatus.OK)
+    // parse json, could contain error message or response in case of no error
+    com.fasterxml.jackson.databind.ObjectMapper objectMapper = new ObjectMapper();
+    try
     {
-      result = response.getBody();
+      UsersCreateResponse usersResponse = objectMapper.readValue(body, UsersCreateResponse.class);
+    }
+    catch(Exception e)
+    {
+      LOGGER.info( "is not valid");
+      MoodleError errorResponse = objectMapper.readValue(body, MoodleError.class);
+      LOGGER.info( errorResponse.message);
+      return false;
     }
 
-    if (result != null && result.list().isEmpty())
-    {
-      throw new Exception("user " + user.getEmail() + " could not be inserted");
-    }
-     */
     return true;
   }
 
