@@ -21,6 +21,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.function.Function;
 import l9g.app.ldap2moodle.Config;
 import l9g.app.ldap2moodle.handler.CryptoHandler;
 import l9g.app.ldap2moodle.model.MoodleAnonymousUser;
@@ -40,6 +41,7 @@ import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -72,17 +74,15 @@ public class MoodleService
     this.config = config;
   }
 
-  record UserCreateResponse( int id, String username)
-    {
-      }
+  record UserCreateResponse( int id, String username) {}
 
-  record UsersCreateResponse( List<UserCreateResponse> list)
-    {
-      }
+  record UsersCreateResponse( List<UserCreateResponse> list) {}
 
-  record UsersCreateRequest( List<MoodleUser> list)
-    {
-      }
+  record UsersCreateRequest( List<MoodleUser> users) {}
+
+  record MoodleError( String exception, String errorcode, String message, String debuginfo) {}
+  
+  
 
   /**
    * create URI with parameters
@@ -212,9 +212,9 @@ public class MoodleService
   {
     LOGGER.debug( "usersCreate" );
 
-    List<MoodleUser> list = new ArrayList<>();
-    list.add( user );
-    UsersCreateRequest payload = new UsersCreateRequest( list );
+    List<MoodleUser> users = new ArrayList<>();
+    users.add( user );
+    UsersCreateRequest payload = new UsersCreateRequest( users );
 
     // Mono<ResponseEntity<String>> 
     Mono<String> response1 = this.webClient().post()
@@ -233,7 +233,7 @@ public class MoodleService
       {
         LOGGER.info( response.toString() );
         if( response.statusCode().equals( HttpStatus.OK ) )
-        {
+        {          
           LOGGER.info( "OK" );
           return response.bodyToMono( String.class );
         }
@@ -245,13 +245,14 @@ public class MoodleService
         }
       } );
     String body = response1.block();
+    
     LOGGER.info( body );
 
 //      .toEntity(String.class);
 //      .bodyToMono(String.class);
 //    ResponseEntity<String> block = response.block();
 //    LOGGER.debug( block.toString());
-    LOGGER.info( response1.toString() );
+    // LOGGER.info( response1.toString() );
 
     /*    
     ResponseEntity<UsersCreateResponse> response
