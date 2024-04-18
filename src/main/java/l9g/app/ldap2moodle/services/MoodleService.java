@@ -92,9 +92,6 @@ public class MoodleService
   }
 
   record UserCreateResponse( long id, String username) {}
-
-  record UsersCreateResponse( UserCreateResponse[] users) {}
-
   record MoodleError( String exception, String errorcode, String message, String debuginfo) {}
   
   
@@ -186,24 +183,24 @@ public class MoodleService
         if (users[i].getUsername()==null) throw new MoodleRestException(MoodleRestException.USERNAME_NULL); else data.append("&").append("users["+i+"][username]").append("=").append(users[i].getUsername());
         if (users[i].getFirstname()==null) throw new MoodleRestException(MoodleRestException.FIRSTNAME_NULL); else data.append("&").append("users["+i+"][firstname]").append("=").append(users[i].getFirstname());
         if (users[i].getLastname()==null) throw new MoodleRestException(MoodleRestException.LASTNAME_NULL); else data.append("&").append("users["+i+"][lastname]").append("=").append(users[i].getLastname());
-        if (users[i].getEmail()==null) throw new MoodleRestException(MoodleRestException.EMAIL_NULL); else data.append("&").append("users["+i+"][email]").append("=").append(users[i].getEmail());
-        if (users[i].getAuth()!=null) data.append("&").append("users["+i+"][auth]").append("=").append(users[i].getAuth());
-        if (users[i].getIdnumber()!=null) data.append("&").append("users["+i+"][idnumber]").append("=").append(users[i].getIdnumber());
-        if (users[i].getLang()!=null) data.append("&").append("users["+i+"][lang]").append("=").append(users[i].getLang());
-        if (users[i].getTimezone()!=null) data.append("&").append("users["+i+"][timezone]").append("=").append(users[i].getTimezone());
-        if (users[i].getDescription()!=null) data.append("&").append("users["+i+"][description]").append("=").append(users[i].getDescription());
-        if (users[i].getCountry()!=null) data.append("&").append("users["+i+"][country]").append("=").append(users[i].getCountry());
+        if (users[i].getEmail()==null) throw new MoodleRestException(MoodleRestException.EMAIL_NULL); else data.append("&").append( "users[" ).append(i).append("][email]").append("=").append(users[i].getEmail());
+        if (users[i].getAuth()!=null) data.append("&").append( "users[" ).append(i).append("][auth]").append("=").append(users[i].getAuth());
+        if (users[i].getIdnumber()!=null) data.append("&").append( "users[" ).append(i).append("][idnumber]").append("=").append(users[i].getIdnumber());
+        if (users[i].getLang()!=null) data.append("&").append( "users[" ).append(i).append("][lang]").append("=").append(users[i].getLang());
+        if (users[i].getTimezone()!=null) data.append("&").append( "users[" ).append(i).append("][timezone]").append("=").append(users[i].getTimezone());
+        if (users[i].getDescription()!=null) data.append("&").append( "users[" ).append(i).append("][description]").append("=").append(users[i].getDescription());
+        if (users[i].getCountry()!=null) data.append("&").append( "users[" ).append(i).append("][country]").append("=").append(users[i].getCountry());
 //        if (users[i].getAlternatename()!=null) data.append("&").append("users["+i+"][alternatename]").append("=").append(user[i].getAlternatename());
         if( users[ i ].getCustomfields() != null )
         {
           for( int j = 0; j < users[ i ].getCustomfields().size(); j++ )
           {
-            data.append( "&" )
-              .append( "users[" + i + "][customfields][" + j + "][type]" )
+            data.append( "&" ).append( "users[" ).append( i ).append( "][customfields][" ).append(j)
+              .append("][type]")
               .append( "=" )
               .append( users[ i ].getCustomfields().get( j ).getName() );
-            data.append( "&" )
-                .append( "users[" + i + "][customfields][" + j + "][value]" )
+            data.append( "&" ).append( "users[" ).append( i ).append( "][customfields][" ).append(j)
+                .append("][value]")
                 .append( "=" )
                 .append( users[ i ].getCustomfields().get( j ).getValue() );
           }
