@@ -91,9 +91,9 @@ public class MoodleService
     this.config = config;
   }
 
-  record UserCreateResponse( int id, String username) {}
+  record UserCreateResponse( long id, String username) {}
 
-  record UsersCreateResponse( List<UserCreateResponse> list) {}
+  record UsersCreateResponse( UserCreateResponse[] users) {}
 
   record MoodleError( String exception, String errorcode, String message, String debuginfo) {}
   
@@ -270,9 +270,9 @@ public class MoodleService
     com.fasterxml.jackson.databind.ObjectMapper objectMapper = new ObjectMapper();
     try
     {
-      UsersCreateResponse usersResponse = objectMapper.readValue(body, UsersCreateResponse.class);
       LOGGER.info("User has been inserted successfully");
-      LOGGER.info(usersResponse.toString());
+      UserCreateResponse[] usersResponse = objectMapper.readValue(body, UserCreateResponse[].class);
+      LOGGER.info(String.valueOf(usersResponse[0].id()));
     }
     catch(Exception e)
     {
