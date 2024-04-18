@@ -17,11 +17,6 @@ package l9g.app.ldap2moodle.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.handler.logging.LogLevel;
-import java.net.URI;
-import java.nio.charset.Charset;
-import java.time.Duration;
-import java.util.*;
-import java.util.function.Function;
 import l9g.app.ldap2moodle.Config;
 import l9g.app.ldap2moodle.handler.CryptoHandler;
 import l9g.app.ldap2moodle.model.MoodleAnonymousUser;
@@ -31,25 +26,23 @@ import l9g.app.ldap2moodle.model.MoodleUsersResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.util.UriBuilder;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.transport.logging.AdvancedByteBufFormat;
-import java.net.URLEncoder;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 /**
  *
@@ -60,23 +53,14 @@ public class MoodleService
 {
   public class MoodleRestException extends Exception {
 
-    public static final String NO_LEGACY="There is no legacy call for this webservice";
     public static final String AUTH_NULL="No credential provided";
-    public static final String REQUIRED_PARAMETER="Parameter is required";
-    public static final String PARAMETER_RANGE="Parameter in not within an accepted range";
-    public static final String PARAMETER_CANNOT_BE_NULL="Parameter cannot be null";
-    public static final String TOKEN_NULL="Token cannot be null";
     public static final String USERNAME_NULL="Username cannot be null";
-    public static final String PASSWORD_NULL="Password cannot be null";
     public static final String FIRSTNAME_NULL="Firstname cannot be null";
     public static final String LASTNAME_NULL="Lastname cannot be null";
     public static final String EMAIL_NULL="Email cannot be null";
-    public static final String URL_NULL="URL cannot be null";
     public static final String USER_NULL="User cannot be null";
     public static final String INVALID_USERID="Bad user id";
-    public static final String INVALID_USER="Invalid user";
-    public static final String NO_LEGACY_CALL="No legacy call";    
-    
+
     MoodleRestException() {}
 
     MoodleRestException(String msg) {
@@ -110,8 +94,6 @@ public class MoodleService
   record UserCreateResponse( int id, String username) {}
 
   record UsersCreateResponse( List<UserCreateResponse> list) {}
-
-  record UsersCreateRequest( List<MoodleUser> users) {}
 
   record MoodleError( String exception, String errorcode, String message, String debuginfo) {}
   
@@ -180,52 +162,6 @@ public class MoodleService
     return new ArrayList<>();
   }
 
-  /**
-   * create user in Moodle
-   *
-   * @param user object
-   *
-   * @return ???
-   */
-  public UsersCreateResponse usersCreateOld( MoodleUser user )
-    throws Exception
-  {
-    LinkedHashMap<String, String> criteria = new LinkedHashMap<>();
-    UsersCreateResponse result = null;
-
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType( MediaType.APPLICATION_JSON );
-
-    List<MoodleUser> list = new ArrayList<>();
-    list.add( user );
-    UsersCreateRequest payload = new UsersCreateRequest( list );
-
-    HttpEntity<UsersCreateRequest> request = new HttpEntity<>( payload, headers );
-
-    ResponseEntity<String> response1 =
-      restTemplate.postForEntity(
-        uriBuilder( "core_user_create_users", criteria ), request,
-        String.class );
-    LOGGER.debug( response1.toString() );
-    /*    
-    ResponseEntity<UsersCreateResponse> response
-      = restTemplate.postForEntity(
-        uriBuilder("core_user_create_users", criteria), request,
-        UsersCreateResponse.class);
-    if (response != null && response.getBody() != null
-      && response.getStatusCode() == HttpStatus.OK)
-    {
-      result = response.getBody();
-    }
-
-    if (result != null && result.list().isEmpty())
-    {
-      throw new Exception("user " + user.getEmail() + " could not be inserted");
-    }
-     */
-    return result;
-  }
-
   public WebClient webClient()
   {
     var httpClient = HttpClient
@@ -258,12 +194,20 @@ public class MoodleService
         if (users[i].getDescription()!=null) data.append("&").append("users["+i+"][description]").append("=").append(users[i].getDescription());
         if (users[i].getCountry()!=null) data.append("&").append("users["+i+"][country]").append("=").append(users[i].getCountry());
 //        if (users[i].getAlternatename()!=null) data.append("&").append("users["+i+"][alternatename]").append("=").append(user[i].getAlternatename());
-/*        if (users[i].getCustomFields()!=null) {
-          for (int j=0; j<user[i].getCustomFields().size(); j++) {
-            data.append("&").append("users["+i+"][customfields]["+j+"][type]").append("=").append(user[i].getCustomFields().get(j).getName()));
-            data.append("&").append("users["+i+"][customfields]["+j+"][value]").append("=").append(user[i].getCustomFields().get(j).getValue()));
+        if( users[ i ].getCustomfields() != null )
+        {
+          for( int j = 0; j < users[ i ].getCustomfields().size(); j++ )
+          {
+            data.append( "&" )
+              .append( "users[" + i + "][customfields][" + j + "][type]" )
+              .append( "=" )
+              .append( users[ i ].getCustomfields().get( j ).getName() );
+            data.append( "&" )
+                .append( "users[" + i + "][customfields][" + j + "][value]" )
+                .append( "=" )
+                .append( users[ i ].getCustomfields().get( j ).getValue() );
           }
-        }*/
+        }
       }
       data.trimToSize();
 /*
@@ -288,14 +232,10 @@ public class MoodleService
     throws Exception
   {
     LOGGER.debug( "usersCreate" );
+    MoodleUser[] moodleUsers = new MoodleUser[1];
+    moodleUsers[0] = user;
 
-//    List<HashMap<String, String>> users = new ArrayList<>();
-//    users.add( user.toMap() );
-
-    MoodleUser moodleusers[] = new MoodleUser[1];
-    moodleusers[0] = user;
-
-    String query = this.getCreateUri(moodleusers);
+    String query = this.getCreateUri(moodleUsers);
     Mono<String> response1 = this.webClient().post()
       .uri(uriBuilder
           -> uriBuilder.path("/webservice/rest/server.php")
@@ -317,9 +257,11 @@ public class MoodleService
         {
           // Turn to error
           LOGGER.info( "not ok" );
-          return response.createError();
+          return response.createException().flatMap(Mono::error);
+          // return response.createError();
         }
       } );
+
     String body = response1.block();
 
     LOGGER.info( body );
@@ -329,10 +271,12 @@ public class MoodleService
     try
     {
       UsersCreateResponse usersResponse = objectMapper.readValue(body, UsersCreateResponse.class);
+      LOGGER.info("User has been inserted successfully");
+      LOGGER.info(usersResponse.toString());
     }
     catch(Exception e)
     {
-      LOGGER.info( "is not valid");
+      LOGGER.info("User has NOT been inserted successfully");
       MoodleError errorResponse = objectMapper.readValue(body, MoodleError.class);
       LOGGER.info( errorResponse.message);
       return false;
