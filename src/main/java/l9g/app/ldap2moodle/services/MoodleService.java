@@ -95,6 +95,9 @@ public class MoodleService
   }
 
   record UserCreateResponse( int id, String username) {}
+  
+  // TODO: figure out correct type
+  // record UserUpdateResponse( String warnings) {} // TODO: item, itemid, warningcode message ????
   record MoodleError( String exception, String errorcode, String message, String debuginfo) {}
   
   
@@ -129,7 +132,7 @@ public class MoodleService
     return uriComponents.toUri();
   }
   
-  public WebClient webClient()
+  private WebClient webClient()
   {
     var httpClient = HttpClient
       .create()
@@ -143,6 +146,14 @@ public class MoodleService
       .build();
   }  
   
+  /**
+   * send post request with given function and given users to moodle
+   * 
+   * @param function
+   * @param moodleUsers
+   * @return
+   * @throws l9g.app.ldap2moodle.services.MoodleService.MoodleRestException 
+   */
   private String postToMoodle( String function, MoodleUser[] moodleUsers )
     throws MoodleRestException
   {
@@ -203,12 +214,18 @@ public class MoodleService
   }
 
  
+  /**
+   * create uri parameters for special moodle 'Rest' URI 
+   * from user array
+   * 
+   * @param users
+   * @return
+   * @throws l9g.app.ldap2moodle.services.MoodleService.MoodleRestException 
+   */
   private LinkedHashMap<String, String> getUserParams(MoodleUser[] users) throws MoodleRestException 
   {
     LinkedHashMap<String, String> data = new LinkedHashMap<>();
-//    criterias.put( "criteria[0][key]", "auth" );
-//    criterias.put( "criteria[0][value]", "ldap" );
-    
+   
     for (int i=0;i<users.length;i++) {
       if (users[i] == null) 
         throw new MoodleRestException(MoodleRestException.USER_NULL);
@@ -283,6 +300,12 @@ public class MoodleService
     return data;
   }
 
+  /**
+   * create user(s?)
+   * @param user
+   * @return
+   * @throws Exception 
+   */
   public MoodleUser usersCreate( MoodleUser user )
     throws Exception
   {
@@ -315,28 +338,19 @@ public class MoodleService
 
   }
 
+  /**
+   * update user(s?)
+   * @param user
+   * @return
+   * @throws Exception 
+   */
   public MoodleUser usersUpdate( MoodleUser user )
     throws Exception    
   {
     MoodleUser[] moodleUsers = new MoodleUser[1];
     moodleUsers[0] = user;
    
-    String body = this.webClient().post()      
-        .uri( this.uriBuilder( "core_user_update_users", this.getUserParams(moodleUsers) ))
-      .accept( MediaType.APPLICATION_JSON )
-      .exchangeToMono( response ->
-      {
-        LOGGER.info( response.toString() );
-        if( response.statusCode().equals( HttpStatus.OK ) )
-        {          
-          return response.bodyToMono( String.class );
-        }
-        else
-        {
-          return response.createException().flatMap(Mono::error);
-        }
-      } )
-      .block();
+    final String body = postToMoodle("core_user_update_users", moodleUsers);
 
     LOGGER.info( body );
 
@@ -344,15 +358,16 @@ public class MoodleService
     com.fasterxml.jackson.databind.ObjectMapper objectMapper = new ObjectMapper();
     try
     {
-      LOGGER.info("User has been inserted successfully");
-      UserCreateResponse[] usersResponse = objectMapper.readValue(body, UserCreateResponse[].class);
-      LOGGER.info(String.valueOf(usersResponse[0].id()));
-      user.setId( usersResponse[0].id() );
+      LOGGER.info("User has been updated successfully");
+//      String response = objectMapper.readValue(body, String.class);
+      
+//      UserUpdateResponse[] usersResponse = objectMapper.readValue(body, UserUpdateResponse[].class);
+//      LOGGER.info( response );
       return user;
     }
-    catch(JsonProcessingException e)
+    catch(Exception e)
     {
-      LOGGER.info("User has NOT been inserted successfully");
+      LOGGER.info("User has NOT been updated successfully");
       MoodleError errorResponse = objectMapper.readValue(body, MoodleError.class);
       LOGGER.error( errorResponse.message);
       throw new MoodleRestException(errorResponse.message);
