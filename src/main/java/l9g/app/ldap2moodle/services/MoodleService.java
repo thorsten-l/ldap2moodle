@@ -91,7 +91,7 @@ public class MoodleService
     this.config = config;
   }
 
-  record UserCreateResponse( long id, String username) {}
+  record UserCreateResponse( int id, String username) {}
   record MoodleError( String exception, String errorcode, String message, String debuginfo) {}
   
   
@@ -173,23 +173,56 @@ public class MoodleService
       .build();
   }
 
-  // from https://github.com/bantonia/MoodleRest/blob/master/src/net/beaconhillcott/moodlerest/MoodleRestUser.java
-  private String getCreateUri(MoodleUser[] users) throws MoodleRestException // Argh!
+  /*
+  private appendValue(int i, String name, String value, StringBuilder data)
   {
+    if (value != null)
+    {
+      data.append( "&" ).append( "users[" ).append( i ).append( "][" + name + "]" ).append( "=" ).append( value );
+    }    
+  }*/
+  
+  // from https://github.com/bantonia/MoodleRest/blob/master/src/net/beaconhillcott/moodlerest/MoodleRestUser.java
+  // Argh!
+  private String getCreateUri(MoodleUser[] users) throws MoodleRestException 
+  {
+
     // try {
       StringBuilder data=new StringBuilder();
       for (int i=0;i<users.length;i++) {
-        if (users[i]==null) throw new MoodleRestException(MoodleRestException.USER_NULL);
-        if (users[i].getUsername()==null) throw new MoodleRestException(MoodleRestException.USERNAME_NULL); else data.append("&").append("users["+i+"][username]").append("=").append(users[i].getUsername());
+        if (users[i]==null) 
+          throw new MoodleRestException(MoodleRestException.USER_NULL);
+        if( users[ i ].getUsername() == null )
+        {
+          throw new MoodleRestException( MoodleRestException.USERNAME_NULL );
+        }
+        data.append( "&" ).append( "users[" + i + "][username]" ).append( "=" ).append( users[ i ].getUsername() );
+        // appendValue(i, "username", users[ i ].getUsername(), data);
         if (users[i].getFirstname()==null) throw new MoodleRestException(MoodleRestException.FIRSTNAME_NULL); else data.append("&").append("users["+i+"][firstname]").append("=").append(users[i].getFirstname());
         if (users[i].getLastname()==null) throw new MoodleRestException(MoodleRestException.LASTNAME_NULL); else data.append("&").append("users["+i+"][lastname]").append("=").append(users[i].getLastname());
         if (users[i].getEmail()==null) throw new MoodleRestException(MoodleRestException.EMAIL_NULL); else data.append("&").append( "users[" ).append(i).append("][email]").append("=").append(users[i].getEmail());
-        if (users[i].getAuth()!=null) data.append("&").append( "users[" ).append(i).append("][auth]").append("=").append(users[i].getAuth());
-        if (users[i].getIdnumber()!=null) data.append("&").append( "users[" ).append(i).append("][idnumber]").append("=").append(users[i].getIdnumber());
-        if (users[i].getLang()!=null) data.append("&").append( "users[" ).append(i).append("][lang]").append("=").append(users[i].getLang());
-        if (users[i].getTimezone()!=null) data.append("&").append( "users[" ).append(i).append("][timezone]").append("=").append(users[i].getTimezone());
-        if (users[i].getDescription()!=null) data.append("&").append( "users[" ).append(i).append("][description]").append("=").append(users[i].getDescription());
-        if (users[i].getCountry()!=null) data.append("&").append( "users[" ).append(i).append("][country]").append("=").append(users[i].getCountry());
+        if( users[ i ].getAuth() != null )
+        {
+          data.append( "&" ).append( "users[" ).append( i ).append( "][auth]" ).append( "=" ).append( users[ i ].getAuth() );
+        }
+        if( users[ i ].getIdnumber() != null )
+        {
+          data.append( "&" ).append( "users[" ).append( i ).append( "][idnumber]" ).append( "=" ).append( users[ i ].getIdnumber() );
+        }
+        if( users[ i ].getLang() != null )
+        {
+          data.append( "&" ).append( "users[" ).append( i ).append( "][lang]" ).append( "=" ).append( users[ i ].getLang() );
+        }
+        if( users[ i ].getTimezone() != null )
+        {
+          data.append( "&" ).append( "users[" ).append( i ).append( "][timezone]" ).append( "=" ).append( users[ i ].getTimezone() );
+        }
+        if( users[ i ].getDescription() != null )
+        {
+          data.append( "&" ).append( "users[" ).append( i ).append( "][description]" ).append( "=" ).append( users[ i ].getDescription() );
+        }
+        if( users[ i ].getCountry() != null )
+          data.append( "&" ).append( "users[" ).append( i ).append( "][country]" ).append( "=" ).append( users[ i ].getCountry() );
 //        if (users[i].getAlternatename()!=null) data.append("&").append("users["+i+"][alternatename]").append("=").append(user[i].getAlternatename());
         if( users[ i ].getCustomfields() != null )
         {
@@ -225,7 +258,7 @@ public class MoodleService
     return data.toString();
   }
 
-  public boolean usersCreate( MoodleUser user )
+  public MoodleUser usersCreate( MoodleUser user )
     throws Exception
   {
     LOGGER.debug( "usersCreate" );
@@ -233,7 +266,8 @@ public class MoodleService
     moodleUsers[0] = user;
 
     String query = this.getCreateUri(moodleUsers);
-    Mono<String> response1 = this.webClient().post()
+    
+    String body = this.webClient().post()
       .uri(uriBuilder
           -> uriBuilder.path("/webservice/rest/server.php")
           .queryParam("wstoken", wstoken)
@@ -247,19 +281,15 @@ public class MoodleService
         LOGGER.info( response.toString() );
         if( response.statusCode().equals( HttpStatus.OK ) )
         {          
-          LOGGER.info( "OK" );
           return response.bodyToMono( String.class );
         }
         else
         {
           // Turn to error
-          LOGGER.info( "not ok" );
           return response.createException().flatMap(Mono::error);
-          // return response.createError();
         }
-      } );
-
-    String body = response1.block();
+      } )
+      .block();
 
     LOGGER.info( body );
 
@@ -270,16 +300,17 @@ public class MoodleService
       LOGGER.info("User has been inserted successfully");
       UserCreateResponse[] usersResponse = objectMapper.readValue(body, UserCreateResponse[].class);
       LOGGER.info(String.valueOf(usersResponse[0].id()));
+      user.setId( usersResponse[0].id() );
+      return user;
     }
     catch(Exception e)
     {
       LOGGER.info("User has NOT been inserted successfully");
       MoodleError errorResponse = objectMapper.readValue(body, MoodleError.class);
-      LOGGER.info( errorResponse.message);
-      return false;
+      LOGGER.error( errorResponse.message);
+      throw new MoodleRestException(errorResponse.message);
     }
 
-    return true;
   }
 
   // TODO: ...
