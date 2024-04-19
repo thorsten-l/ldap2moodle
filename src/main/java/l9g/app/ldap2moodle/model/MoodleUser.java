@@ -37,22 +37,7 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class MoodleUser
-{/*
-  public HashMap<String, String> toMap() {
-    HashMap<String, String> userMap = new HashMap<String, String>();
-
-    userMap.put("username", this.username);
-    userMap.put("firstname", this.firstname);
-    userMap.put("lastname", this.lastname);
-    userMap.put("email", this.email);
-
-    userMap.put("idnumber", this.idnumber);
-    userMap.put("department", this.department);
-    userMap.put("auth", this.auth);
-
-    return userMap;
-}*/
-
+{
 
   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   private Integer id;
@@ -71,15 +56,12 @@ public class MoodleUser
 
   private String department;
 
-  private int firstaccess;
-
-  private int lastaccess;
 
   private String auth;
 
-  private boolean suspended = false;
+  private Boolean suspended;
 
-  private boolean confirmed;
+  private Boolean confirmed;
 
   private String lang;
 
@@ -87,11 +69,15 @@ public class MoodleUser
 
   private String timezone;
 
-  private int mailformat;
+  private Integer firstaccess;
+
+  private Integer lastaccess;
+  
+  private Integer mailformat;
 
   private String description;
 
-  private int descriptionformat;
+  private Integer descriptionformat;
 
   private String country;
 

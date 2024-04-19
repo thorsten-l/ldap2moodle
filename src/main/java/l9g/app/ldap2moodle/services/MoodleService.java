@@ -18,6 +18,7 @@ package l9g.app.ldap2moodle.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.handler.logging.LogLevel;
+import java.lang.reflect.Field;
 import l9g.app.ldap2moodle.Config;
 import l9g.app.ldap2moodle.handler.CryptoHandler;
 import l9g.app.ldap2moodle.model.MoodleAnonymousUser;
@@ -56,15 +57,8 @@ public class MoodleService
   
   public class MoodleRestException extends Exception {
 
-    public static final String AUTH_NULL="No credential provided";
     public static final String USERNAME_NULL="Username cannot be null";
-    public static final String FIRSTNAME_NULL="Firstname cannot be null";
-    public static final String LASTNAME_NULL="Lastname cannot be null";
-    public static final String EMAIL_NULL="Email cannot be null";
     public static final String USER_NULL="User cannot be null";
-    public static final String INVALID_USERID="Bad user id";
-
-    MoodleRestException() {}
 
     MoodleRestException(String msg) {
       super(msg);
@@ -94,11 +88,15 @@ public class MoodleService
     this.config = config;
   }
 
+  // Response classes
   record UserCreateResponse( int id, String username) {}
+  // TODO: create smaller version of response class for get_users
+  record GetUsersResponse(   List<MoodleUser> users, List<String> warnings) {}
+  
   
   // TODO: figure out correct type
   // record UserUpdateResponse( String warnings) {} // TODO: item, itemid, warningcode message ????
-  record MoodleError( String exception, String errorcode, String message, String debuginfo) {}
+  record MoodleErrorResponse( String exception, String errorcode, String message, String debuginfo) {}
   
   
 
@@ -155,12 +153,12 @@ public class MoodleService
    * @throws l9g.app.ldap2moodle.services.MoodleService.MoodleRestException 
    */
   private String postToMoodle( String function, MoodleUser[] moodleUsers )
-    throws MoodleRestException
+    throws MoodleRestException, IllegalAccessException
   {
     return this.webClient()
       .post()
-      .uri( this.uriBuilder( function, this.getUserParams(moodleUsers) ))
-      .accept( MediaType.APPLICATION_JSON )
+        .uri( this.uriBuilder( function, this.getUserParams(moodleUsers) ))
+        .accept( MediaType.APPLICATION_JSON )
       .exchangeToMono( response ->
       {
         LOGGER.info( response.toString() );
@@ -190,8 +188,6 @@ public class MoodleService
     LinkedHashMap<String, String> criterias = new LinkedHashMap<>();
     criterias.put( "criteria[0][key]", "auth" );
     criterias.put( "criteria[0][value]", "ldap" );
-//    criterias.put("criteria[0][key]", "email");
-//    criterias.put("criteria[0][value]", "%");
 
     ResponseEntity<MoodleUsersResponse> response =
       restTemplate.getForEntity(
@@ -222,70 +218,57 @@ public class MoodleService
    * @return
    * @throws l9g.app.ldap2moodle.services.MoodleService.MoodleRestException 
    */
-  private LinkedHashMap<String, String> getUserParams(MoodleUser[] users) throws MoodleRestException 
+  private LinkedHashMap<String, String> getUserParams(MoodleUser[] users) throws MoodleRestException, IllegalAccessException 
   {
     LinkedHashMap<String, String> data = new LinkedHashMap<>();
    
-    for (int i=0;i<users.length;i++) {
-      if (users[i] == null) 
-        throw new MoodleRestException(MoodleRestException.USER_NULL);
-      if( users[ i ].getUsername() == null )
+    for( int i = 0; i < users.length; i++ )
+    {
+      MoodleUser user = users[ i ];
+      if( user == null )
+      {
+        throw new MoodleRestException( MoodleRestException.USER_NULL );
+      }
+      if( user.getUsername() == null )
       {
         throw new MoodleRestException( MoodleRestException.USERNAME_NULL );
       }
-      // mandatory fields
-      data.put( "users[" + i + "][username]",  users[ i ].getUsername());
-      data.put( "users[" + i + "][firstname]",  users[ i ].getFirstname());
-      data.put( "users[" + i + "][lastname]",  users[ i ].getLastname());
-      data.put( "users[" + i + "][email]",  users[ i ].getEmail());
 
-      if( users[ i ].getId() != null )
+      // get fields via Reflection API
+      Field[] fields = user.getClass().getDeclaredFields();
+      for( Field field : fields )
       {
-        data.put( "users[" + i + "][id]",  users[ i ].getId().toString());
-      }      
-      if( users[ i ].getAuth() != null )
-      {
-        data.put( "users[" + i + "][auth]",  users[ i ].getAuth());
+        // String name = field.getName();
+        if( !"customfields".equals( field.getName() ) )
+        {
+          // make member public :-)
+          field.setAccessible( true );
+          // get value
+          if( field.get( user ) != null )
+          {
+            // value is set => put into hash map
+            if (field.getType() == Boolean.class)
+            {
+              // convert boolean true/false to 1/0
+              data.put( "users[" + i + "][" + field.getName() + "]", field.get( user ).equals( Boolean.TRUE)?"1":"0" );              
+            } else {
+              data.put( "users[" + i + "][" + field.getName() + "]", field.get( user ).toString() );
+            }              
+          }
+          // make member private again
+          field.setAccessible( false );
+        }
       }
-      if( users[ i ].getIdnumber() != null )
-      {
-        data.put( "users[" + i + "][idnumber]",  users[ i ].getIdnumber());
-      }
-      if( users[ i ].getLang() != null )
-      {
-        data.put( "users[" + i + "][lang]",  users[ i ].getLang());
-      }
-      if( users[ i ].getTimezone() != null )
-      {
-        data.put( "users[" + i + "][timezone]",  users[ i ].getTimezone());
-      }
-      if( users[ i ].getDescription() != null )
-      {
-        data.put( "users[" + i + "][description]",  users[ i ].getDescription());
-      }
-      if( users[ i ].getDepartment()!= null )
-      {
-        data.put( "users[" + i + "][department]",  users[ i ].getDepartment());
-      }      
-      if( users[ i ].getCountry() != null )
-      {
-        data.put( "users[" + i + "][country]",  users[ i ].getCountry());
-      }
-      if (users[ i ].getId() != null)
-      {
-        // do not send suspended info for new users (otherwise create will fail)
-        data.put( "users[" + i + "][suspended]", users[ i ].isSuspended()?"1":"0");
-      }
-      
-      // a bit strange ... but in order to use foreach XD
-      AtomicInteger index = new AtomicInteger(0);
-      AtomicInteger userIndex = new AtomicInteger(i);
-      users[ i ].getCustomfields().forEach((key, value) -> 
+
+      // a bit strange ... but in order to use foreach loop XD
+      AtomicInteger index = new AtomicInteger( 0 );
+      AtomicInteger userIndex = new AtomicInteger( i );
+      user.getCustomfields().forEach( ( key, value ) ->
       {
         int j = index.getAndIncrement();
         data.put( "users[" + userIndex.get() + "][customfields][" + j + "][type]", key );
         data.put( "users[" + userIndex.get() + "][customfields][" + j + "][value]", value );
-      });
+      } );
     }
 /*
       NodeList elements=MoodleCallRestWebService.call(data.toString());
@@ -327,16 +310,20 @@ public class MoodleService
     com.fasterxml.jackson.databind.ObjectMapper objectMapper = new ObjectMapper();
     try
     {
-      LOGGER.info("User has been inserted successfully");
+      // try and cast string to response class expected
       UserCreateResponse[] usersResponse = objectMapper.readValue(body, UserCreateResponse[].class);
+      // conversion succeeded => handle response
+      LOGGER.info("User has been inserted successfully");
       LOGGER.info(String.valueOf(usersResponse[0].id()));
       user.setId( usersResponse[0].id() );
       return user;
     }
     catch(JsonProcessingException e)
     {
+      // conversion failed =>
+      // cast string response to error class
       LOGGER.info("User has NOT been inserted successfully");
-      MoodleError errorResponse = objectMapper.readValue(body, MoodleError.class);
+      MoodleErrorResponse errorResponse = objectMapper.readValue(body, MoodleErrorResponse.class);
       LOGGER.error( errorResponse.message);
       throw new MoodleRestException(errorResponse.message);
     }
@@ -373,7 +360,7 @@ public class MoodleService
     catch(Exception e)
     {
       LOGGER.info("User has NOT been updated successfully");
-      MoodleError errorResponse = objectMapper.readValue(body, MoodleError.class);
+      MoodleErrorResponse errorResponse = objectMapper.readValue(body, MoodleErrorResponse.class);
       LOGGER.error( errorResponse.message);
       throw new MoodleRestException(errorResponse.message);
     }
