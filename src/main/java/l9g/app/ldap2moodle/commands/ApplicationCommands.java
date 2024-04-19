@@ -96,6 +96,9 @@ public class ApplicationCommands
     {
       if (!ldapHandler.getLdapEntryMap().containsKey(user.getUsername()))
       {
+        // moodle user does not exist in ldap user list
+        // => suspend in moodle
+        
         /*
         List<Integer> roleIds = user.getRole_ids();
 

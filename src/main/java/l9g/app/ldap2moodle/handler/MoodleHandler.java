@@ -121,7 +121,7 @@ public class MoodleHandler
       try
       {
         LOGGER.debug("UPDATE: " + objectMapper.writeValueAsString(user));
-        user = moodleService.usersUpdate(user.getId(), user);
+        user = moodleService.usersUpdate(user);
       }
       catch (Throwable t)
       {

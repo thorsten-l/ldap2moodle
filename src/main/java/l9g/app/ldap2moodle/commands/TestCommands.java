@@ -123,4 +123,46 @@ public class TestCommands
     moodleHandler.getMoodleUsersList()
       .forEach(entry -> System.out.println(entry.toString()));
   }
+  
+  
+  @Command(alias = "t-create", description = "creates a dummy user")
+  public void testCreateDummy() throws Throwable
+  {
+    logbackConfig.getL9gLogger().setLevel(Level.DEBUG);
+    LOGGER.debug("testCreateDummy");
+    var dummy = new MoodleUser();
+    dummy.setAuth( "ldap");
+    dummy.setFirstname( "Susi");
+    dummy.setLastname( "Smith" );
+    dummy.setUsername( "susismith");
+    dummy.setEmail( "susi.smith@test.org");
+    dummy.setDepartment( "maths");
+      
+    dummy.addCustomField("faculty2", "biology");
+    dummy.addCustomField("ou", "maths");
+    dummy.addCustomField("employeetype", "student");
+      
+    moodleHandler.createUser( dummy );
+  }
+  
+  
+    @Command(alias = "t-update", description = "update the dummy user")
+  public void testUpdateDummy() throws Throwable
+  {
+    logbackConfig.getL9gLogger().setLevel(Level.DEBUG);
+    LOGGER.debug("testCreateDummy");
+    var dummy = new MoodleUser();
+    dummy.setAuth( "ldap");
+    dummy.setFirstname( "Susi");
+    dummy.setLastname( "Smith" );
+    dummy.setUsername( "susismith");
+    dummy.setEmail( "susi.smith@test.org");
+    dummy.setDepartment( "maths");
+      
+    dummy.addCustomField("faculty2", "biology");
+    dummy.addCustomField("ou", "maths");
+    dummy.addCustomField("employeetype", "student");
+      
+    moodleHandler.createUser( dummy );
+  }
 }

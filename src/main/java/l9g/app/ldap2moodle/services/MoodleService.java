@@ -314,7 +314,7 @@ public class MoodleService
   }
 
   // TODO: ...
-  public MoodleUser usersUpdate( int id, MoodleUser user )
+  public MoodleUser usersUpdate( MoodleUser user )
   {
     return user;
   }
