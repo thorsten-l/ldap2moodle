@@ -77,7 +77,7 @@ public class MoodleUser
 
   private String auth;
 
-  private boolean suspended;
+  private boolean suspended = false;
 
   private boolean confirmed;
 

@@ -271,6 +271,11 @@ public class MoodleService
       {
         data.put( "users[" + i + "][country]",  users[ i ].getCountry());
       }
+      if (users[ i ].getId() != null)
+      {
+        // do not send suspended info for new users (otherwise create will fail)
+        data.put( "users[" + i + "][suspended]", users[ i ].isSuspended()?"1":"0");
+      }
       
       // a bit strange ... but in order to use foreach XD
       AtomicInteger index = new AtomicInteger(0);

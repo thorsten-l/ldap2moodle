@@ -149,7 +149,7 @@ public class TestCommands
   }
   
   
-    @Command(alias = "t-update", description = "update the dummy user")
+  @Command(alias = "t-update", description = "update the dummy user")
   public void testUpdateDummy() throws Throwable
   {
     logbackConfig.getL9gLogger().setLevel(Level.DEBUG);
@@ -165,4 +165,19 @@ public class TestCommands
       
     moodleHandler.updateUser( user );
   }
+
+  @Command(alias = "t-suspend", description = "suspend the dummy user")
+  public void testSuspendDummy() throws Throwable
+  {
+    logbackConfig.getL9gLogger().setLevel(Level.DEBUG);
+    
+    LOGGER.debug("testSuspendDummy");
+    
+    MoodleUser user = moodleHandler.getMoodleUsersMap().get( "susismith" );    
+    user.setSuspended( true );
+      
+    moodleHandler.updateUser( user );
+  }
+  
+  
 }
