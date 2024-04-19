@@ -131,12 +131,14 @@ public class TestCommands
     logbackConfig.getL9gLogger().setLevel(Level.DEBUG);
     LOGGER.debug("testCreateDummy");
     var dummy = new MoodleUser();
+    
     dummy.setAuth( "ldap");
     dummy.setFirstname( "Susi");
     dummy.setLastname( "Smith" );
     dummy.setUsername( "susismith");
     dummy.setEmail( "susi.smith@test.org");
     dummy.setDepartment( "maths");
+    dummy.setIdnumber("12345678");    
       
     dummy.addCustomField("faculty2", "biology");
     dummy.addCustomField("ou", "maths");
@@ -152,17 +154,19 @@ public class TestCommands
     logbackConfig.getL9gLogger().setLevel(Level.DEBUG);
     LOGGER.debug("testCreateDummy");
     var dummy = new MoodleUser();
+    
     dummy.setAuth( "ldap");
     dummy.setFirstname( "Susi");
     dummy.setLastname( "Smith" );
     dummy.setUsername( "susismith");
     dummy.setEmail( "susi.smith@test.org");
     dummy.setDepartment( "maths");
+    dummy.setIdnumber("12345678");
       
     dummy.addCustomField("faculty2", "biology");
     dummy.addCustomField("ou", "maths");
     dummy.addCustomField("employeetype", "student");
       
-    moodleHandler.createUser( dummy );
+    moodleHandler.updateUser(dummy );
   }
 }

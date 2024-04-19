@@ -149,17 +149,5 @@ public class MoodleUser
     UserCustomField field=new UserCustomField(name, value);
     customfields.add(field);
   }
-
-  // custom fields
-  /*
-  private String ou;
-  private String faculty2;
-  private String employeetype;  
-*/
-  /*
-  customfields][0][type]= string
-  customfields][0][value]= string
-
-  */
   
 }

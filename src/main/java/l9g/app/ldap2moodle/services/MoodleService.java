@@ -15,6 +15,7 @@
  */
 package l9g.app.ldap2moodle.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.handler.logging.LogLevel;
 import l9g.app.ldap2moodle.Config;
@@ -51,6 +52,7 @@ import java.util.List;
 @Service
 public class MoodleService
 {
+  
   public class MoodleRestException extends Exception {
 
     public static final String AUTH_NULL="No credential provided";
@@ -118,11 +120,51 @@ public class MoodleService
       parameters.forEach( ( key, value ) -> builder.queryParam( key, value ) );
     }
 
-    UriComponents uriComponents = builder.build().encode();
+    UriComponents uriComponents = builder.build();
+    LOGGER.debug( "uri={}", uriComponents.toUriString() );
+    uriComponents = uriComponents.encode();
     LOGGER.debug( "uri={}", uriComponents.toUriString() );
 
     return uriComponents.toUri();
   }
+  
+  public WebClient webClient()
+  {
+    var httpClient = HttpClient
+      .create()
+      .wiretap( "reactor.netty.http.client.HttpClient",
+        LogLevel.DEBUG, AdvancedByteBufFormat.TEXTUAL );
+
+    return WebClient
+      .builder()
+      .clientConnector( new ReactorClientHttpConnector( httpClient ) )
+      .baseUrl( config.getMoodleBaseUrl() )
+      .build();
+  }  
+  
+  private String postToMoodle( String function, MoodleUser[] moodleUsers )
+    throws MoodleRestException
+  {
+    return this.webClient()
+      .post()
+      .uri( this.uriBuilder( function, this.getUserParams(moodleUsers) ))
+      .accept( MediaType.APPLICATION_JSON )
+      .exchangeToMono( response ->
+      {
+        LOGGER.info( response.toString() );
+        if( response.statusCode().equals( HttpStatus.OK ) )
+        {
+          return response.bodyToMono( String.class );
+        }
+        else
+        {
+          return response.createException().flatMap(Mono::error);
+        }
+      } )
+      .block();
+  }
+  
+  
 
   /**
    * get all users authenticated by LDAP/OICD from Moodle
@@ -159,87 +201,63 @@ public class MoodleService
     return new ArrayList<>();
   }
 
-  public WebClient webClient()
+ 
+  private LinkedHashMap<String, String> getUserParams(MoodleUser[] users) throws MoodleRestException 
   {
-    var httpClient = HttpClient
-      .create()
-      .wiretap( "reactor.netty.http.client.HttpClient",
-        LogLevel.DEBUG, AdvancedByteBufFormat.TEXTUAL );
+    LinkedHashMap<String, String> data = new LinkedHashMap<>();
+//    criterias.put( "criteria[0][key]", "auth" );
+//    criterias.put( "criteria[0][value]", "ldap" );
+    
+    for (int i=0;i<users.length;i++) {
+      if (users[i] == null) 
+        throw new MoodleRestException(MoodleRestException.USER_NULL);
+      if( users[ i ].getUsername() == null )
+      {
+        throw new MoodleRestException( MoodleRestException.USERNAME_NULL );
+      }
+      // mandatory fields
+      data.put( "users[" + i + "][username]",  users[ i ].getUsername());
+      data.put( "users[" + i + "][firstname]",  users[ i ].getFirstname());
+      data.put( "users[" + i + "][lastname]",  users[ i ].getLastname());
+      data.put( "users[" + i + "][email]",  users[ i ].getEmail());
 
-    return WebClient
-      .builder()
-      .clientConnector( new ReactorClientHttpConnector( httpClient ) )
-      .baseUrl( config.getMoodleBaseUrl() )
-      .build();
-  }
-
-  /*
-  private appendValue(int i, String name, String value, StringBuilder data)
-  {
-    if (value != null)
-    {
-      data.append( "&" ).append( "users[" ).append( i ).append( "][" + name + "]" ).append( "=" ).append( value );
-    }    
-  }*/
-  
-  // from https://github.com/bantonia/MoodleRest/blob/master/src/net/beaconhillcott/moodlerest/MoodleRestUser.java
-  // Argh!
-  private String getCreateUri(MoodleUser[] users) throws MoodleRestException 
-  {
-
-    // try {
-      StringBuilder data=new StringBuilder();
-      for (int i=0;i<users.length;i++) {
-        if (users[i]==null) 
-          throw new MoodleRestException(MoodleRestException.USER_NULL);
-        if( users[ i ].getUsername() == null )
+      if( users[ i ].getAuth() != null )
+      {
+        data.put( "users[" + i + "][auth]",  users[ i ].getAuth());
+      }
+      if( users[ i ].getIdnumber() != null )
+      {
+        data.put( "users[" + i + "][idnumber]",  users[ i ].getIdnumber());
+      }
+      if( users[ i ].getLang() != null )
+      {
+        data.put( "users[" + i + "][lang]",  users[ i ].getLang());
+      }
+      if( users[ i ].getTimezone() != null )
+      {
+        data.put( "users[" + i + "][timezone]",  users[ i ].getTimezone());
+      }
+      if( users[ i ].getDescription() != null )
+      {
+        data.put( "users[" + i + "][description]",  users[ i ].getDescription());
+      }
+      if( users[ i ].getDepartment()!= null )
+      {
+        data.put( "users[" + i + "][department]",  users[ i ].getDepartment());
+      }      
+      if( users[ i ].getCountry() != null )
+      {
+        data.put( "users[" + i + "][country]",  users[ i ].getCountry());
+      }
+      if( users[ i ].getCustomfields() != null )
+      {
+        for( int j = 0; j < users[ i ].getCustomfields().size(); j++ )
         {
-          throw new MoodleRestException( MoodleRestException.USERNAME_NULL );
-        }
-        data.append( "&" ).append( "users[" + i + "][username]" ).append( "=" ).append( users[ i ].getUsername() );
-        // appendValue(i, "username", users[ i ].getUsername(), data);
-        if (users[i].getFirstname()==null) throw new MoodleRestException(MoodleRestException.FIRSTNAME_NULL); else data.append("&").append("users["+i+"][firstname]").append("=").append(users[i].getFirstname());
-        if (users[i].getLastname()==null) throw new MoodleRestException(MoodleRestException.LASTNAME_NULL); else data.append("&").append("users["+i+"][lastname]").append("=").append(users[i].getLastname());
-        if (users[i].getEmail()==null) throw new MoodleRestException(MoodleRestException.EMAIL_NULL); else data.append("&").append( "users[" ).append(i).append("][email]").append("=").append(users[i].getEmail());
-        if( users[ i ].getAuth() != null )
-        {
-          data.append( "&" ).append( "users[" ).append( i ).append( "][auth]" ).append( "=" ).append( users[ i ].getAuth() );
-        }
-        if( users[ i ].getIdnumber() != null )
-        {
-          data.append( "&" ).append( "users[" ).append( i ).append( "][idnumber]" ).append( "=" ).append( users[ i ].getIdnumber() );
-        }
-        if( users[ i ].getLang() != null )
-        {
-          data.append( "&" ).append( "users[" ).append( i ).append( "][lang]" ).append( "=" ).append( users[ i ].getLang() );
-        }
-        if( users[ i ].getTimezone() != null )
-        {
-          data.append( "&" ).append( "users[" ).append( i ).append( "][timezone]" ).append( "=" ).append( users[ i ].getTimezone() );
-        }
-        if( users[ i ].getDescription() != null )
-        {
-          data.append( "&" ).append( "users[" ).append( i ).append( "][description]" ).append( "=" ).append( users[ i ].getDescription() );
-        }
-        if( users[ i ].getCountry() != null )
-          data.append( "&" ).append( "users[" ).append( i ).append( "][country]" ).append( "=" ).append( users[ i ].getCountry() );
-//        if (users[i].getAlternatename()!=null) data.append("&").append("users["+i+"][alternatename]").append("=").append(user[i].getAlternatename());
-        if( users[ i ].getCustomfields() != null )
-        {
-          for( int j = 0; j < users[ i ].getCustomfields().size(); j++ )
-          {
-            data.append( "&" ).append( "users[" ).append( i ).append( "][customfields][" ).append(j)
-              .append("][type]")
-              .append( "=" )
-              .append( users[ i ].getCustomfields().get( j ).getName() );
-            data.append( "&" ).append( "users[" ).append( i ).append( "][customfields][" ).append(j)
-                .append("][value]")
-                .append( "=" )
-                .append( users[ i ].getCustomfields().get( j ).getValue() );
-          }
+          data.put( "users[" + i + "][customfields][" + j + "][type]",  users[ i ].getCustomfields().get( j ).getName() );
+          data.put( "users[" + i + "][customfields][" + j + "][value]",  users[ i ].getCustomfields().get( j ).getValue() );
         }
       }
-      data.trimToSize();
+    }
 /*
       NodeList elements=MoodleCallRestWebService.call(data.toString());
       for (int j=0;j<elements.getLength();j+=2) {
@@ -255,26 +273,49 @@ public class MoodleService
       user[i].setId(Long.parseLong((String)(hash.get(user[i].getUsername()))));
     }*/
 
-    return data.toString();
+    return data;
   }
 
   public MoodleUser usersCreate( MoodleUser user )
     throws Exception
   {
     LOGGER.debug( "usersCreate" );
+
     MoodleUser[] moodleUsers = new MoodleUser[1];
     moodleUsers[0] = user;
+   
+    final String body = postToMoodle("core_user_create_users", moodleUsers);
 
-    String query = this.getCreateUri(moodleUsers);
-    
-    String body = this.webClient().post()
-      .uri(uriBuilder
-          -> uriBuilder.path("/webservice/rest/server.php")
-          .queryParam("wstoken", wstoken)
-          .queryParam("moodlewsrestformat", "json")
-          .queryParam("wsfunction", "core_user_create_users")
-          .query(query)
-          .build())
+    LOGGER.info( body );
+
+    // parse json, could contain error message or response in case of no error
+    com.fasterxml.jackson.databind.ObjectMapper objectMapper = new ObjectMapper();
+    try
+    {
+      LOGGER.info("User has been inserted successfully");
+      UserCreateResponse[] usersResponse = objectMapper.readValue(body, UserCreateResponse[].class);
+      LOGGER.info(String.valueOf(usersResponse[0].id()));
+      user.setId( usersResponse[0].id() );
+      return user;
+    }
+    catch(JsonProcessingException e)
+    {
+      LOGGER.info("User has NOT been inserted successfully");
+      MoodleError errorResponse = objectMapper.readValue(body, MoodleError.class);
+      LOGGER.error( errorResponse.message);
+      throw new MoodleRestException(errorResponse.message);
+    }
+
+  }
+
+  public MoodleUser usersUpdate( MoodleUser user )
+    throws Exception    
+  {
+    MoodleUser[] moodleUsers = new MoodleUser[1];
+    moodleUsers[0] = user;
+   
+    String body = this.webClient().post()      
+        .uri( this.uriBuilder( "core_user_update_users", this.getUserParams(moodleUsers) ))
       .accept( MediaType.APPLICATION_JSON )
       .exchangeToMono( response ->
       {
@@ -285,7 +326,6 @@ public class MoodleService
         }
         else
         {
-          // Turn to error
           return response.createException().flatMap(Mono::error);
         }
       } )
@@ -303,24 +343,19 @@ public class MoodleService
       user.setId( usersResponse[0].id() );
       return user;
     }
-    catch(Exception e)
+    catch(JsonProcessingException e)
     {
       LOGGER.info("User has NOT been inserted successfully");
       MoodleError errorResponse = objectMapper.readValue(body, MoodleError.class);
       LOGGER.error( errorResponse.message);
       throw new MoodleRestException(errorResponse.message);
     }
-
-  }
-
-  // TODO: ...
-  public MoodleUser usersUpdate( MoodleUser user )
-  {
-    return user;
+    
   }
 
   // TODO: ...
   public MoodleUser usersAnonymize( int id, MoodleAnonymousUser user )
+    throws Exception    
   {
     return null;
   }
