@@ -44,6 +44,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -221,6 +222,10 @@ public class MoodleService
       data.put( "users[" + i + "][lastname]",  users[ i ].getLastname());
       data.put( "users[" + i + "][email]",  users[ i ].getEmail());
 
+      if( users[ i ].getId() != null )
+      {
+        data.put( "users[" + i + "][id]",  users[ i ].getId().toString());
+      }      
       if( users[ i ].getAuth() != null )
       {
         data.put( "users[" + i + "][auth]",  users[ i ].getAuth());
@@ -249,14 +254,16 @@ public class MoodleService
       {
         data.put( "users[" + i + "][country]",  users[ i ].getCountry());
       }
-      if( users[ i ].getCustomfields() != null )
+      
+      // a bit strange ... but in order to use foreach XD
+      AtomicInteger index = new AtomicInteger(0);
+      AtomicInteger userIndex = new AtomicInteger(i);
+      users[ i ].getCustomfields().forEach((key, value) -> 
       {
-        for( int j = 0; j < users[ i ].getCustomfields().size(); j++ )
-        {
-          data.put( "users[" + i + "][customfields][" + j + "][type]",  users[ i ].getCustomfields().get( j ).getName() );
-          data.put( "users[" + i + "][customfields][" + j + "][value]",  users[ i ].getCustomfields().get( j ).getValue() );
-        }
-      }
+        int j = index.getAndIncrement();
+        data.put( "users[" + userIndex.get() + "][customfields][" + j + "][type]", key );
+        data.put( "users[" + userIndex.get() + "][customfields][" + j + "][value]", value );
+      });
     }
 /*
       NodeList elements=MoodleCallRestWebService.call(data.toString());

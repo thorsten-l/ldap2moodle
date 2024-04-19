@@ -25,6 +25,7 @@ import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -51,49 +52,6 @@ public class MoodleUser
 
     return userMap;
 }*/
-
-  @Getter
-  @Setter
-  // from https://github.com/bantonia/MoodleRest/blob/master/src/net/beaconhillcott/moodlerest/...
-  public static class UserCustomField implements Serializable
-  {
-    // private String type;
-
-    private String value;
-
-    private String name;
-
-    // private String shortname;
-
-    public UserCustomField( String name, String value )
-    {
-      // this.type = type;
-      this.value = value;
-      this.name = name;
-      // this.shortname = shortname;
-    }
-/*
-    private void setCustomFieldField( String nodeName, String content )
-    {
-      if( nodeName.equals( "name" ) )
-      {
-        setName( content );
-      }
-      if( nodeName.equals( "type" ) )
-      {
-        setType( content );
-      }
-      if( nodeName.equals( "value" ) )
-      {
-        setValue( content );
-      }
-      if( nodeName.equals( "shortname" ) )
-      {
-        setShortname( content );
-      }
-    }
-*/
-  }
 
 
   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
@@ -141,13 +99,11 @@ public class MoodleUser
 
   private String profileimageurl;
 
-  private ArrayList<UserCustomField> customfields = null;
-
-  public void addCustomField(String name, String value) {
-    if (customfields==null)
-      customfields=new ArrayList<>();
-    UserCustomField field=new UserCustomField(name, value);
-    customfields.add(field);
+  private Map<String, String> customfields = new HashMap<>();
+  
+  public void addCustomField( String name, String value )
+  {
+    customfields.put( name, value );
   }
   
 }

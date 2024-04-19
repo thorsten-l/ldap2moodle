@@ -16,7 +16,9 @@
 package l9g.app.ldap2moodle.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import l9g.app.ldap2moodle.Config;
@@ -78,6 +80,7 @@ public class MoodleHandler
   {
     LOGGER.debug("readMoodleUsers");
 
+    
     moodleUsersList = moodleService.users();
 
     if (moodleUsersList != null)
@@ -99,15 +102,21 @@ public class MoodleHandler
       LOGGER.debug("CREATE: " + user);
       try
       {
-        moodleService.usersCreate(user);
+        user = moodleService.usersCreate(user); 
+        if (moodleUsersList == null)
+        {
+          // may be empty in testing environment
+          moodleUsersList = new LinkedList<>();
+        }
+        this.moodleUsersList.add( user );
+        this.moodleUsersMap.put( user.getUsername(), user);
       }
       catch (Throwable t)
       {
         LOGGER.error("*** CREATE FAILED *** " + t.getMessage());
       }
     }
-
-    return null; // user;
+    return user;
   }
 
   public MoodleUser updateUser(MoodleUser user)

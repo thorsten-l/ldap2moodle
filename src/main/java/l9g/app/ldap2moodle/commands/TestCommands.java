@@ -19,6 +19,7 @@ import ch.qos.logback.classic.Level;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.unboundid.asn1.ASN1GeneralizedTime;
 import com.unboundid.ldap.sdk.Entry;
+import java.util.Random;
 import l9g.app.ldap2moodle.LogbackConfig;
 import l9g.app.ldap2moodle.services.MoodleService;
 import l9g.app.ldap2moodle.engine.JavaScriptEngine;
@@ -152,21 +153,16 @@ public class TestCommands
   public void testUpdateDummy() throws Throwable
   {
     logbackConfig.getL9gLogger().setLevel(Level.DEBUG);
-    LOGGER.debug("testCreateDummy");
-    var dummy = new MoodleUser();
     
-    dummy.setAuth( "ldap");
-    dummy.setFirstname( "Susi");
-    dummy.setLastname( "Smith" );
-    dummy.setUsername( "susismith");
-    dummy.setEmail( "susi.smith@test.org");
-    dummy.setDepartment( "maths");
-    dummy.setIdnumber("12345678");
+    LOGGER.debug("testUpdateDummy");
+    
+    MoodleUser user = moodleHandler.getMoodleUsersMap().get( "susismith" );
+    
+    Random rand = new Random();
+    int randomIdnumer = rand.nextInt(999999);
+    
+    user.setIdnumber( String.valueOf( randomIdnumer) );    
       
-    dummy.addCustomField("faculty2", "biology");
-    dummy.addCustomField("ou", "maths");
-    dummy.addCustomField("employeetype", "student");
-      
-    moodleHandler.updateUser(dummy );
+    moodleHandler.updateUser( user );
   }
 }
