@@ -15,8 +15,12 @@
  */
 package l9g.app.ldap2moodle.services;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.oracle.truffle.js.builtins.JSONBuiltins;
+import com.unboundid.util.json.JSONObject;
 import io.netty.handler.logging.LogLevel;
 import java.lang.reflect.Field;
 import l9g.app.ldap2moodle.Config;
@@ -27,6 +31,7 @@ import l9g.app.ldap2moodle.model.MoodleUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -48,11 +53,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  *
  * @author Thorsten Ludewig (t.ludewig@gmail.com)
+ * K.Borm (k.borm [at] ostfalia.de)
  */
 @Service
 public class MoodleService
 {
-  
   public class MoodleRestException extends Exception {
 
     public static final String USERNAME_NULL="Username cannot be null";
@@ -70,12 +75,13 @@ public class MoodleService
   
   // Response classes
   record UserCreateResponse( int id, String username) {}
-  record GetUsersResponse( List<MoodleUser> users, List<String> warnings) {}  
+  // record GetUsersResponse( MoodleUser[] users, String[] warnings) {}
+  // @JsonIgnoreProperties(ignoreUnknown = true)
+  // @JsonInclude(JsonInclude.Include.NON_EMPTY)
+  // record GetUsersResponse( List<MoodleUser> users, List<String> warnings) {}
   // record UserUpdateResponse( String warnings) {} // TODO: item, itemid, warningcode message ????
   
   record MoodleErrorResponse( String exception, String errorcode, String message, String debuginfo) {}
-
-  
 
   private final static Logger LOGGER =
     LoggerFactory.getLogger( MoodleService.class );
@@ -86,6 +92,9 @@ public class MoodleService
 
   final private Config config;
 
+  @Value("${app.moodle.auth}")
+  private String authMethod;
+
   @Autowired
   public MoodleService( Config config, CryptoHandler cryptoHandler )
   {
@@ -94,9 +103,6 @@ public class MoodleService
     this.wstoken = cryptoHandler.decrypt( config.getMoodleToken() );
     this.config = config;
   }
-
-  
-  
 
   /**
    * create URI with parameters
@@ -205,24 +211,27 @@ public class MoodleService
     List<MoodleUser> result = null;
 
     LinkedHashMap<String, String> criteria = new LinkedHashMap<>();
-    /*    criteria.put( "criteria[0][key]", "email" );
-    criteria.put( "criteria[0][value]", "%" );*/
-
     criteria.put( "criteria[0][key]", "auth" );
-    criteria.put( "criteria[0][value]", "ldap" );
+    criteria.put( "criteria[0][value]", authMethod );
 
     com.fasterxml.jackson.databind.ObjectMapper objectMapper = new ObjectMapper();   
            
     final String body = this.getFromMoodle( "core_user_get_users", criteria );      
     try
     {
+      // define response datatype
+      record GetUsersResponse( List<MoodleUser> users, List<String> warnings) {}
+
+      JSONObject jsonObject = new JSONObject(body);
+
       GetUsersResponse usersResponse = objectMapper.readValue(body, GetUsersResponse.class);
+      LOGGER.info(usersResponse.users.toString());
           
-      result = usersResponse.users();
-      if (!usersResponse.warnings().isEmpty())
+/*      result = usersResponse.users();
+      if (!usersResponse.warnings().length)
       {
         LOGGER.warn( "warning avaiable for users (on core_user_get_users)" );        
-      }
+      }*/
     }
     catch(JsonProcessingException e)
     {
@@ -236,13 +245,6 @@ public class MoodleService
     return result;    
   }
 
-  // TODO: ...
-  public List<MoodleRole> roles()
-  {
-    return new ArrayList<>();
-  }
-
- 
   /**
    * create uri parameters for special moodle 'Rest' URI 
    * from user array
@@ -294,14 +296,15 @@ public class MoodleService
       }
 
       // a bit strange ... but in order to use foreach loop XD
+
       AtomicInteger index = new AtomicInteger( 0 );
       AtomicInteger userIndex = new AtomicInteger( i );
-      user.getCustomfields().forEach( ( key, value ) ->
+/*      user.getCustomfields().forEach( ( key, value ) ->
       {
         int j = index.getAndIncrement();
         data.put( "users[" + userIndex.get() + "][customfields][" + j + "][type]", key );
         data.put( "users[" + userIndex.get() + "][customfields][" + j + "][value]", value );
-      } );
+      } );*/
     }
 /*
       NodeList elements=MoodleCallRestWebService.call(data.toString());

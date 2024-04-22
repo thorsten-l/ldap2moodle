@@ -79,3 +79,7 @@ mail:
   subject: "%date{yyyy-MM-dd HH:mm:ss} - %m"
   from: "ldap2moodle <user@example.de>"
   receipients: admin@example.de
+
+app:
+  moodle:
+    auth: ldap

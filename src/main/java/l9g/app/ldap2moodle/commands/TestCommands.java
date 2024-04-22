@@ -140,11 +140,12 @@ public class TestCommands
     dummy.setEmail( "susi.smith@test.org");
     dummy.setDepartment( "maths");
     dummy.setIdnumber("12345678");    
-      
+
+/*
     dummy.addCustomField("faculty2", "biology");
     dummy.addCustomField("ou", "maths");
     dummy.addCustomField("employeetype", "student");
-      
+  */
     moodleHandler.createUser( dummy );
   }
   

@@ -15,17 +15,15 @@
  */
 package l9g.app.ldap2moodle.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
+
 import java.io.Serializable;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.reflect.Field;
+import java.util.*;
 
 /**
  *
@@ -38,7 +36,23 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class MoodleUser
 {
-
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonInclude(JsonInclude.Include.NON_EMPTY)
+  public static class CustomField
+  {
+    public CustomField() {}
+    String shortname;
+    String value;
+    String type;
+    String displayvalue;
+    String name;
+/*
+    @JsonAnySetter
+    public void add(String key, String value) {
+      System.out.println(key);
+      // customfields.put(key, value);
+    }*/
+  }
   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   private Integer id;
 
@@ -85,11 +99,59 @@ public class MoodleUser
 
   private String profileimageurl;
 
-  private Map<String, String> customfields = new HashMap<>();
-  
-  public void addCustomField( String name, String value )
+  // todo: create from Json...
+  // shortname -> value
+
+  List<CustomField> customfields = new LinkedList<>();
+//  private Map<String, String> customfields = new HashMap<>();
+
+/*  public void addCustomField( String name, String value )
   {
     customfields.put( name, value );
+  }*/
+  /*
+@JsonAnySetter
+public void add(String key, String value) {
+  System.out.println(key);
+  // customfields.put(key, value);
+}*/
+
+/*@JsonSetter("customfields")
+  public void setTheName(List<CustomField> value) {
+    System.out.println("hallo");
+    // this.name = name;
+  } */
+
+  /**
+   * creates a new MoodleUsr object with all values set to null except for the differences
+   * @param ldapUser
+   * @return new MoodleUser object
+   */
+  public MoodleUser diff(MoodleUser ldapUser) throws IllegalAccessException
+  {
+    MoodleUser diffUser = new MoodleUser();
+    boolean diffFound = false;
+
+    Field[] fields = this.getClass().getDeclaredFields();
+    for (Field field : fields) {
+      // String name = field.getName();
+//      if (!"customfields".equals(field.getName())) {
+        // handle field that is no custom field:
+        // make member public :-)
+        // field.setAccessible(true);
+        // get value
+        if (field.get(ldapUser) != field.get(this)) {
+          diffFound = true;
+          field.set(diffUser, field.get(ldapUser));
+          // make member private again
+          // field.setAccessible(false);
+        }
+//      }
+    }
+    if (diffFound)
+    {
+      diffUser.setId(this.id);
+    }
+    return diffFound?diffUser:null;
   }
-  
 }

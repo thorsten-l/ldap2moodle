@@ -123,7 +123,7 @@ public class ApplicationCommands
 
     try (JavaScriptEngine js = new JavaScriptEngine())
     {
-      int noEntries = ldapHandler.getLdapEntryMap().size();
+      final int noEntries = ldapHandler.getLdapEntryMap().size();
       int entryCounter = 0;
 
       for (Entry entry : ldapHandler.getLdapEntryMap().values())
@@ -136,31 +136,13 @@ public class ApplicationCommands
         if (moodleUser != null)
         {
           // UPDATE
-          
-/*          MoodleUser updateUser = new MoodleUser();
-          updateUser.setId(moodleUser.getId());
-          updateUser.setUsername(login);
-  */
-          
-          /*
-          List<Integer> roleIds
-            = moodleHandler.getMoodleUsersMap().get(login).getRole_ids();
+          MoodleUser ldapUser = new MoodleUser();
+          ldapUser.setId(moodleUser.getId());
+          ldapUser.setUsername(login);
 
-          if (roleIds.contains(adminGroupId))
-          {
-            // IGNORE Admin Users
-            LOGGER.warn("IGNORE UPDATE ADMIN: {}, {} {} ({})",
-              entryCounter, noEntries,
-              moodleUser.getLogin(),
-              moodleUser.getFirstname(), moodleUser.getLastname(),
-              moodleUser.getEmail());
-          }
-          else
-          {
-            // UPDATE
-            js.getValue().executeVoid("update", updateUser, entry);
-            moodleHandler.updateUser(updateUser);
-          }*/
+          js.getValue().executeVoid("update", ldapUser, entry);
+          MoodleUser diffUser = moodleUser.diff(ldapUser);
+          moodleHandler.updateUser(diffUser);
         }
         else
         {
