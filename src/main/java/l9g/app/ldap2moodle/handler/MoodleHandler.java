@@ -17,10 +17,12 @@ package l9g.app.ldap2moodle.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import l9g.app.ldap2moodle.Config;
 import l9g.app.ldap2moodle.model.MoodleAnonymousUser;
 import l9g.app.ldap2moodle.model.MoodleRole;
@@ -78,16 +80,23 @@ public class MoodleHandler
 
   public void readMoodleUsers()
   {
-    LOGGER.debug("readMoodleUsers");
-
-    
-    moodleUsersList = moodleService.users();
-
-    if (moodleUsersList != null)
+    try
     {
-      moodleUsersMap.clear();
-      moodleUsersList.
-        forEach(user -> moodleUsersMap.put(user.getUsername(), user));
+      LOGGER.debug("readMoodleUsers");
+      
+      
+      List<MoodleUser> moodleUsersList = moodleService.fetchUsers();
+      
+      if (moodleUsersList != null)
+      {
+        moodleUsersMap.clear();
+        moodleUsersList.
+          forEach(user -> moodleUsersMap.put(user.getUsername(), user));
+      }
+    }
+    catch( Exception ex )
+    {
+      java.util.logging.Logger.getLogger( MoodleHandler.class.getName() ).log( Level.SEVERE, null, ex );
     }
   }
 
@@ -102,13 +111,13 @@ public class MoodleHandler
       LOGGER.debug("CREATE: " + user);
       try
       {
-        user = moodleService.usersCreate(user); 
-        if (moodleUsersList == null)
+        user = moodleService.createUsers(user); 
+/*        if (moodleUsersList == null)
         {
           // may be empty in testing environment
           moodleUsersList = new LinkedList<>();
         }
-        this.moodleUsersList.add( user );
+        this.moodleUsersList.add( user );*/
         this.moodleUsersMap.put( user.getUsername(), user);
       }
       catch (Throwable t)
@@ -130,7 +139,7 @@ public class MoodleHandler
       try
       {
         LOGGER.debug("UPDATE: " + objectMapper.writeValueAsString(user));
-        user = moodleService.usersUpdate(user);
+        user = moodleService.updateUsers(user);
       }
       catch (Throwable t)
       {
@@ -153,7 +162,7 @@ public class MoodleHandler
       try
       {
         // moodleService.usersDelete(user.getId());
-        moodleService.usersAnonymize(user.getId(),
+        moodleService.anonymizeUsers(user.getId(),
           new MoodleAnonymousUser(user.getUsername()));
       }
       catch (Throwable t)
@@ -168,6 +177,12 @@ public class MoodleHandler
   @Getter
   private final Map<String, MoodleUser> moodleUsersMap = new HashMap<>();
 
-  @Getter
-  private List<MoodleUser> moodleUsersList;
+  public Collection<MoodleUser> getMoodleUsersList()
+  {
+    return moodleUsersMap.values();
+  }
+  
+  // avoid redundancy
+  // @Getter
+  // private List<MoodleUser> moodleUsersList;
 }

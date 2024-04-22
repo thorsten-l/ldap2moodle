@@ -24,13 +24,11 @@ import l9g.app.ldap2moodle.handler.CryptoHandler;
 import l9g.app.ldap2moodle.model.MoodleAnonymousUser;
 import l9g.app.ldap2moodle.model.MoodleRole;
 import l9g.app.ldap2moodle.model.MoodleUser;
-import l9g.app.ldap2moodle.model.MoodleUsersResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -69,6 +67,15 @@ public class MoodleService
       return super.getMessage();
     }
   }
+  
+  // Response classes
+  record UserCreateResponse( int id, String username) {}
+  record GetUsersResponse( List<MoodleUser> users, List<String> warnings) {}  
+  // record UserUpdateResponse( String warnings) {} // TODO: item, itemid, warningcode message ????
+  
+  record MoodleErrorResponse( String exception, String errorcode, String message, String debuginfo) {}
+
+  
 
   private final static Logger LOGGER =
     LoggerFactory.getLogger( MoodleService.class );
@@ -88,15 +95,6 @@ public class MoodleService
     this.config = config;
   }
 
-  // Response classes
-  record UserCreateResponse( int id, String username) {}
-  // TODO: create smaller version of response class for get_users
-  record GetUsersResponse(   List<MoodleUser> users, List<String> warnings) {}
-  
-  
-  // TODO: figure out correct type
-  // record UserUpdateResponse( String warnings) {} // TODO: item, itemid, warningcode message ????
-  record MoodleErrorResponse( String exception, String errorcode, String message, String debuginfo) {}
   
   
 
@@ -145,7 +143,7 @@ public class MoodleService
   }  
   
   /**
-   * send post request with given function and given users to moodle
+   * send post request with given function and given fetchUsers to moodle
    * 
    * @param function
    * @param moodleUsers
@@ -154,8 +152,8 @@ public class MoodleService
    */
   private String postToMoodle( String function, MoodleUser[] moodleUsers )
     throws MoodleRestException, IllegalAccessException
-  {
-    return this.webClient()
+  {     
+    return this.webClient()      
       .post()
         .uri( this.uriBuilder( function, this.getUserParams(moodleUsers) ))
         .accept( MediaType.APPLICATION_JSON )
@@ -175,32 +173,67 @@ public class MoodleService
   }
   
   
-
+  private String getFromMoodle( String function, LinkedHashMap<String, String> params )
+  {     
+    return this.webClient()      
+      .get()
+        .uri( this.uriBuilder( function, params ))
+        .accept( MediaType.APPLICATION_JSON )
+      .exchangeToMono( response -> // use flux here for handling large response ???
+      {
+        LOGGER.info( response.toString() );
+        if( response.statusCode().equals( HttpStatus.OK ) )
+        {
+          return response.bodyToMono( String.class );
+        }
+        else
+        {
+          return response.createException().flatMap(Mono::error);
+        }
+      } )
+      .block();
+  }
+  
+  
   /**
    * get all users authenticated by LDAP/OICD from Moodle
    *
    * @return
    */
-  public List<MoodleUser> users()
+  public List<MoodleUser> fetchUsers() throws Exception
   {
     List<MoodleUser> result = null;
 
-    LinkedHashMap<String, String> criterias = new LinkedHashMap<>();
-    criterias.put( "criteria[0][key]", "auth" );
-    criterias.put( "criteria[0][value]", "ldap" );
+    LinkedHashMap<String, String> criteria = new LinkedHashMap<>();
+    /*    criteria.put( "criteria[0][key]", "email" );
+    criteria.put( "criteria[0][value]", "%" );*/
 
-    ResponseEntity<MoodleUsersResponse> response =
-      restTemplate.getForEntity(
-        uriBuilder( "core_user_get_users", criterias ),
-        MoodleUsersResponse.class );
+    criteria.put( "criteria[0][key]", "auth" );
+    criteria.put( "criteria[0][value]", "ldap" );
 
-    if( response != null && response.getBody() != null
-      && response.getStatusCode() == HttpStatus.OK )
+    com.fasterxml.jackson.databind.ObjectMapper objectMapper = new ObjectMapper();   
+           
+    final String body = this.getFromMoodle( "core_user_get_users", criteria );      
+    try
     {
-      result = response.getBody().getUsers();
+      GetUsersResponse usersResponse = objectMapper.readValue(body, GetUsersResponse.class);
+          
+      result = usersResponse.users();
+      if (!usersResponse.warnings().isEmpty())
+      {
+        LOGGER.warn( "warning avaiable for users (on core_user_get_users)" );        
+      }
     }
-
-    return result;
+    catch(JsonProcessingException e)
+    {
+      // conversion failed => cast string response to error class
+      LOGGER.info("Users have NOT been fetched");
+      MoodleErrorResponse errorResponse = objectMapper.readValue(body, MoodleErrorResponse.class);
+      LOGGER.error( errorResponse.message);
+      throw new MoodleRestException(errorResponse.message);
+    }
+    
+    return result;    
   }
 
   // TODO: ...
@@ -294,7 +327,7 @@ public class MoodleService
    * @return
    * @throws Exception 
    */
-  public MoodleUser usersCreate( MoodleUser user )
+  public MoodleUser createUsers( MoodleUser user )
     throws Exception
   {
     LOGGER.debug( "usersCreate" );
@@ -307,7 +340,7 @@ public class MoodleService
     LOGGER.info( body );
 
     // parse json, could contain error message or response in case of no error
-    com.fasterxml.jackson.databind.ObjectMapper objectMapper = new ObjectMapper();
+    ObjectMapper objectMapper = new ObjectMapper();
     try
     {
       // try and cast string to response class expected
@@ -336,7 +369,7 @@ public class MoodleService
    * @return
    * @throws Exception 
    */
-  public MoodleUser usersUpdate( MoodleUser user )
+  public MoodleUser updateUsers( MoodleUser user )
     throws Exception    
   {
     MoodleUser[] moodleUsers = new MoodleUser[1];
@@ -368,7 +401,7 @@ public class MoodleService
   }
 
   // TODO: ...
-  public MoodleUser usersAnonymize( int id, MoodleAnonymousUser user )
+  public MoodleUser anonymizeUsers( int id, MoodleAnonymousUser user )
     throws Exception    
   {
     return null;
