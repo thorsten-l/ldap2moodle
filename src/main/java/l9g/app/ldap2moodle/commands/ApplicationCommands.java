@@ -18,6 +18,7 @@ package l9g.app.ldap2moodle.commands;
 import ch.qos.logback.classic.Level;
 import com.unboundid.asn1.ASN1GeneralizedTime;
 import com.unboundid.ldap.sdk.Entry;
+import java.util.Objects;
 import l9g.app.ldap2moodle.Config;
 import l9g.app.ldap2moodle.LogbackConfig;
 import l9g.app.ldap2moodle.TimestampUtil;
@@ -86,35 +87,21 @@ public class ApplicationCommands
 
     moodleHandler.readMoodleUsers();
 
-    Integer adminGroupId = moodleHandler.getAdminGroupId();
-    LOGGER.debug("adminGroupId=" + adminGroupId);
+//    Integer adminGroupId = moodleHandler.getAdminGroupId();
+//    LOGGER.debug("adminGroupId=" + adminGroupId);
 
     ///////////////////////////////////////////////////////////////////////////
     // DELETE
+    LOGGER.info( "*** DELETE USERS");
+    
     ldapHandler.readAllLdapEntryUIDs();
     for (MoodleUser user : moodleHandler.getMoodleUsersList())
     {
       if (!ldapHandler.getLdapEntryMap().containsKey(user.getUsername()))
-      {
+      {            
         // moodle user does not exist in ldap user list
-        // => suspend in moodle
-        
-        /*
-        List<Integer> roleIds = user.getRole_ids();
-
-        if (user.getId() == 1 || roleIds.contains(adminGroupId))
-        {
-          // IGNORE Admin Users
-          LOGGER.warn("IGNORE DELETE ADMIN: {}, {} {} ({})",
-            user.getUsername(), user.getFirstname(),
-            user.getLastname(), user.getEmail());
-        }
-        else
-        {
-          // DELETE
-          moodleHandler.deleteUser(user);
-        }
-         */
+        // => suspend in moodle        
+        moodleHandler.suspendUser(user);        
       }
     }
 
@@ -132,6 +119,8 @@ public class ApplicationCommands
 
     ldapHandler.readLdapEntries(timestamp, true);
 
+    LOGGER.info( "*** UPDATE/CREATE USERS");
+
     try (JavaScriptEngine js = new JavaScriptEngine())
     {
       int noEntries = ldapHandler.getLdapEntryMap().size();
@@ -143,12 +132,15 @@ public class ApplicationCommands
         LOGGER.debug("{}/{}", entryCounter, noEntries);
         String login = entry.getAttributeValue(config.getLdapUserId());
         MoodleUser moodleUser = moodleHandler.getMoodleUsersMap().get(login);
-        MoodleUser updateUser = new MoodleUser();
 
         if (moodleUser != null)
         {
+          // UPDATE
+          
+/*          MoodleUser updateUser = new MoodleUser();
           updateUser.setId(moodleUser.getId());
           updateUser.setUsername(login);
+  */
           
           /*
           List<Integer> roleIds
@@ -173,8 +165,10 @@ public class ApplicationCommands
         else
         {
           // CREATE
-          js.getValue().executeVoid("create", updateUser, entry);
-          moodleHandler.createUser(updateUser);
+          moodleUser = new MoodleUser();
+          moodleUser.setUsername(login);
+          js.getValue().executeVoid("create", moodleUser, entry);
+          moodleHandler.createUser(moodleUser);
         }
       }
     }

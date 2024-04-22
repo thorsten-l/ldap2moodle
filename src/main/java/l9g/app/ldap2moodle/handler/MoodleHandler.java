@@ -16,15 +16,13 @@
 package l9g.app.ldap2moodle.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import l9g.app.ldap2moodle.Config;
-import l9g.app.ldap2moodle.model.MoodleAnonymousUser;
 import l9g.app.ldap2moodle.model.MoodleRole;
 import l9g.app.ldap2moodle.model.MoodleUser;
 import lombok.Getter;
@@ -51,6 +49,11 @@ public class MoodleHandler
   @Autowired
   private MoodleService moodleService;
 
+  private final ObjectMapper objectMapper = new ObjectMapper();
+
+  @Getter
+  private final Map<String, MoodleUser> moodleUsersMap = new HashMap<>();  
+  
   @Bean
   public MoodleHandler moodleHandlerBean()
   {
@@ -58,6 +61,10 @@ public class MoodleHandler
     return this;
   }
 
+  /*
+  // Admin users are normally manual accounts that are not synchronized. 
+  // If a synchronized user is also admin then he or she shall be suspended
+  // if he or she leaves the organisation.
   public int getAdminGroupId()
   {
     LOGGER.debug("getAdminGroupId");
@@ -77,29 +84,31 @@ public class MoodleHandler
 
     return adminGroupId;
   }
+*/
 
-  public void readMoodleUsers()
+  /**
+   * read all users from moodle that need to be synchronized
+   */
+  public void readMoodleUsers() 
+    throws Exception // do not handle exceptions inside!
   {
-    try
+    LOGGER.debug("readMoodleUsers");      
+
+    List<MoodleUser> moodleUsersList = moodleService.fetchUsers();
+
+    if (moodleUsersList != null)
     {
-      LOGGER.debug("readMoodleUsers");
-      
-      
-      List<MoodleUser> moodleUsersList = moodleService.fetchUsers();
-      
-      if (moodleUsersList != null)
-      {
-        moodleUsersMap.clear();
-        moodleUsersList.
-          forEach(user -> moodleUsersMap.put(user.getUsername(), user));
-      }
-    }
-    catch( Exception ex )
-    {
-      java.util.logging.Logger.getLogger( MoodleHandler.class.getName() ).log( Level.SEVERE, null, ex );
+      moodleUsersMap.clear();
+      moodleUsersList.
+        forEach(user -> moodleUsersMap.put(user.getUsername(), user));
     }
   }
 
+  /**
+   * create new user in Moodle and update moodleUsersMap
+   * @param user
+   * @return 
+   */
   public MoodleUser createUser(MoodleUser user)
   {
     if (config.isDryRun())
@@ -130,6 +139,13 @@ public class MoodleHandler
 
   public MoodleUser updateUser(MoodleUser user)
   {
+    if (Objects.equals( user.getAuth(), "manual" ))
+    {
+      // do not suspend manual users as they might contain
+      LOGGER.debug("user is manually inserted => ignore");
+      return user;
+    }        
+    
     if (config.isDryRun())
     {
       LOGGER.debug("UPDATE DRY RUN: " + user);
@@ -150,32 +166,20 @@ public class MoodleHandler
     return user;
   }
 
-  public void deleteUser(MoodleUser user)
+    
+  public MoodleUser suspendUser(MoodleUser user)
   {
-    if (config.isDryRun())
+    if (Objects.equals( user.getSuspended(), Boolean.FALSE ))
     {
-      LOGGER.debug("DELETE DRY RUN: " + user);
+      user.setSuspended( Boolean.TRUE );
+    } else {
+      return user;
     }
-    else
-    {
-      LOGGER.debug("DELETE: " + user);
-      try
-      {
-        // moodleService.usersDelete(user.getId());
-        moodleService.anonymizeUsers(user.getId(),
-          new MoodleAnonymousUser(user.getUsername()));
-      }
-      catch (Throwable t)
-      {
-        LOGGER.error("*** DELETE (Anonymize) FAILED *** " + t.getMessage());
-      }
-    }
-  }
+    return this.updateUser(user );                  
+  }    
+  
+    
 
-  private final ObjectMapper objectMapper = new ObjectMapper();
-
-  @Getter
-  private final Map<String, MoodleUser> moodleUsersMap = new HashMap<>();
 
   public Collection<MoodleUser> getMoodleUsersList()
   {

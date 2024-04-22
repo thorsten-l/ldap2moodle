@@ -2,6 +2,14 @@
 
 Create, update and delete moodle user entries from a selected LDAP directory server.
 
+## Preconditions
+
+* Users to be synchronized are authenticated with a single plugin (e.g. ldap or oicd)
+* Admin users are created with a different authentication meth. method (normally 'manual').
+  Therefore they do not need to be considered separately here.
+* Users who are not in Ldap will be suspended.
+  
+
 ## Installation
 
 * enable moodle webservice for REST protocol
