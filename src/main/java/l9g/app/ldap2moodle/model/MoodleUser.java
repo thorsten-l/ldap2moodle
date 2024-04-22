@@ -17,7 +17,6 @@ package l9g.app.ldap2moodle.model;
 
 import com.fasterxml.jackson.annotation.*;
 
-import java.io.Serializable;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -36,23 +35,7 @@ import java.util.*;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class MoodleUser
 {
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  @JsonInclude(JsonInclude.Include.NON_EMPTY)
-  public static class CustomField
-  {
-    public CustomField() {}
-    String shortname;
-    String value;
-    String type;
-    String displayvalue;
-    String name;
-/*
-    @JsonAnySetter
-    public void add(String key, String value) {
-      System.out.println(key);
-      // customfields.put(key, value);
-    }*/
-  }
+
   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   private Integer id;
 
@@ -99,28 +82,15 @@ public class MoodleUser
 
   private String profileimageurl;
 
-  // todo: create from Json...
-  // shortname -> value
-
   List<CustomField> customfields = new LinkedList<>();
 //  private Map<String, String> customfields = new HashMap<>();
 
-/*  public void addCustomField( String name, String value )
+  public void addCustomField( CustomField field )
   {
-    customfields.put( name, value );
-  }*/
-  /*
-@JsonAnySetter
-public void add(String key, String value) {
-  System.out.println(key);
-  // customfields.put(key, value);
-}*/
+    // Todo: check if shortname is already in list
+    customfields.add( field );
+  }
 
-/*@JsonSetter("customfields")
-  public void setTheName(List<CustomField> value) {
-    System.out.println("hallo");
-    // this.name = name;
-  } */
 
   /**
    * creates a new MoodleUsr object with all values set to null except for the differences
