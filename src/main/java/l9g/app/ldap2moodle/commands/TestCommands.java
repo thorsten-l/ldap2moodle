@@ -167,6 +167,7 @@ public class TestCommands
     ldapUser.setLastname( user.getLastname());
     ldapUser.setFirstname( user.getFirstname());
     ldapUser.addCustomField( "faculty2", user.getCustomField("faculty2"));
+    ldapUser.addCustomField( "employeetype", "teacher");
     
     Random rand = new Random();
     int randomIdnumer = rand.nextInt(999999);    
@@ -176,6 +177,7 @@ public class TestCommands
     moodleHandler.updateUser( diffUser );
   }
 
+ 
   @Command(alias = "t-suspend", description = "suspend the dummy user")
   public void testSuspendDummy() throws Throwable
   {

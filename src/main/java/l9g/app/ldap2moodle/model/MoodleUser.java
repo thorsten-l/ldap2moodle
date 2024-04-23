@@ -115,7 +115,7 @@ public class MoodleUser
    * @return new MoodleUser object
    * @throws java.lang.IllegalAccessException
    */
-  public MoodleUser diff( MoodleUser ldapUser )
+  public MoodleUser diff( MoodleUser ldapUser ) 
     throws IllegalAccessException
   {
     MoodleUser diffUser = new MoodleUser();
@@ -124,12 +124,6 @@ public class MoodleUser
     Field[] fields = this.getClass().getDeclaredFields();
     for( Field field : fields )
     {
-      // String name = field.getName();
-//      if (!"customfields".equals(field.getName())) {
-      // handle field that is no custom field:
-      // make member public :-)
-      // field.setAccessible(true);
-      // get value
 //        System.out.println("LDAP: " + field.get(ldapUser).toString());
 //        System.out.println("LDAP: " + field.get(this).toString());
       if( !"customfields".equals( field.getName() ) )
@@ -138,8 +132,6 @@ public class MoodleUser
         {
           diffFound = true;
           field.set( diffUser, field.get( ldapUser ) );
-          // make member private again
-          // field.setAccessible(false);
         }
       } else {
         // Customfield handling
