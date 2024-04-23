@@ -16,14 +16,11 @@
 package l9g.app.ldap2moodle.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.logging.Level;
 import l9g.app.ldap2moodle.Config;
-import l9g.app.ldap2moodle.model.MoodleRole;
 import l9g.app.ldap2moodle.model.MoodleUser;
 import lombok.Getter;
 import org.slf4j.Logger;

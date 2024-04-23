@@ -31,6 +31,8 @@ import java.text.MessageFormat;
 import java.util.HashMap;
 import javax.net.ssl.SSLSocketFactory;
 import l9g.app.ldap2moodle.Config;
+import l9g.app.ldap2moodle.services.LdapService;
+import l9g.app.ldap2moodle.services.MoodleService;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +54,10 @@ public class LdapHandler
   private Config config;
 
   @Autowired
-  private CryptoHandler cryptoHandler;
+  private LdapService ldapService;
+  
+//  @Autowired
+//  private CryptoHandler cryptoHandler;
 
   @Bean
   public LdapHandler ldapHandlerBean()
@@ -61,6 +66,7 @@ public class LdapHandler
     return this;
   }
 
+  /*
   private LDAPConnection getConnection() throws Exception
   {
     LOGGER.debug("host = " + config.getLdapHostname());
@@ -97,19 +103,35 @@ public class LdapHandler
     SSLUtil sslUtil = new SSLUtil(new TrustAllTrustManager());
     return sslUtil.createSSLSocketFactory();
   }
-
+*/
   private void printLdapEntriesMap()
   {
-    ldapEntryMap.forEach((k, v) ->
+    ldapService.getLdapEntryMap().forEach((k, v) ->
     {
       System.out.println(k + " = " + v);
     });
   }
 
+  private void preProcessLdapEntries()
+  {
+    
+  }
+  
   public void readLdapEntries(
     ASN1GeneralizedTime lastSyncTimestamp, boolean withAttributes)
     throws Throwable
-  {
+  {    
+    String filter = new MessageFormat(
+      config.getLdapFilter()).format(new Object[]
+    {
+      lastSyncTimestamp.toString()
+    });
+        
+    ldapService.readLdapEntries( filter, config.getLdapBaseDn(), 
+      SearchScope.SUB, config.getLdapUserAttributeNames(), config.getLdapUserId(), lastSyncTimestamp );    
+
+/*    
+    
     ldapEntryMap.clear();
 
     String filter = new MessageFormat(
@@ -191,11 +213,23 @@ public class LdapHandler
           info("build list from source DNs, {} entries", totalSourceEntries);
       }
     }
+*/
   }
 
   public void readAllLdapEntryUIDs() throws Throwable
   {
-    readLdapEntries(new ASN1GeneralizedTime(0), false);
+    final ASN1GeneralizedTime lastSyncTime = new ASN1GeneralizedTime(0);
+    
+    String filter = new MessageFormat(
+      config.getLdapFilter()).format(new Object[]
+    {
+      lastSyncTime.toString()
+    });
+        
+    ldapService.readLdapEntries( filter, config.getLdapBaseDn(), 
+      SearchScope.SUB, new String[0], config.getLdapUserId(), lastSyncTime );
+    
+    // readLdapEntries(new ASN1GeneralizedTime(0), false);
   }
 
   public void test() throws Throwable
@@ -210,6 +244,15 @@ public class LdapHandler
     printLdapEntriesMap();
   }
 
-  @Getter
-  private final HashMap<String, Entry> ldapEntryMap = new HashMap<>();
+  
+  public HashMap<String, Entry> getLdapEntryMap()
+  {
+    return this.ldapService.getLdapEntryMap();
+  }
+  
+  // @Getter
+  // private final HashMap<String, Entry> ldapEntryMap = new HashMap<>();
+  
+  private final HashMap<String, Entry> studyProgramMap = new HashMap<>();
+  
 }
