@@ -92,8 +92,13 @@ public class ApplicationCommands
 
     ///////////////////////////////////////////////////////////////////////////
     // DELETE
+    
+    // iterate through all Moodle users and check if users exists in 
+    // LDAP users. If false then suspend user in Moodle
+    
     LOGGER.info( "*** DELETE USERS");
     
+    // read users from Ldap without attributes (just uids)
     ldapHandler.readAllLdapEntryUIDs();
     moodleHandler.getMoodleUsersMap().forEach( ( key, user ) ->
     {
@@ -106,8 +111,13 @@ public class ApplicationCommands
     } );
 
     ///////////////////////////////////////////////////////////////////////////
+    // CREATE / UPDATE
+    
+    // iterate through all LDAP users:
+    // if user does not exist in Moodle => create 
+    // if user exists in Moodle => check for update
+    
     ASN1GeneralizedTime timestamp;
-
     if (fullSync)
     {
       timestamp = new ASN1GeneralizedTime(0l); // 01.01.1970, unix time 0
@@ -117,6 +127,7 @@ public class ApplicationCommands
       timestamp = timestampUtil.getLastSyncTimestamp();
     }
 
+    // read users from LDAP with attributes
     ldapHandler.readLdapEntries(timestamp, true);
 
     LOGGER.info( "*** UPDATE/CREATE USERS");

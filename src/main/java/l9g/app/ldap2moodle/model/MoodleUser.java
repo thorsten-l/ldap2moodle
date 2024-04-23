@@ -107,7 +107,6 @@ public class MoodleUser
     }
     return null;
   }
-
   
   /**
    * creates a new MoodleUsr object with all values set to null except for the differences
@@ -116,7 +115,7 @@ public class MoodleUser
    * @throws java.lang.IllegalAccessException
    */
   public MoodleUser diff( MoodleUser ldapUser ) 
-    throws IllegalAccessException
+    throws IllegalAccessException, Exception
   {
     MoodleUser diffUser = new MoodleUser();
     boolean diffFound = false;
@@ -130,6 +129,11 @@ public class MoodleUser
       {
         if( field.get( ldapUser ) != field.get( this ) )
         {
+          if( "username".equals( field.getName() ) )
+          {
+            throw new Exception("username cannot be different");
+          }
+          
           diffFound = true;
           field.set( diffUser, field.get( ldapUser ) );
         }
