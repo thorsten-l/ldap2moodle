@@ -94,13 +94,14 @@ public class MoodleHandler
   {
     LOGGER.debug("readMoodleUsers");      
 
-    List<MoodleUser> moodleUsersList = moodleService.fetchUsers();
+    final List<MoodleUser> moodleUsersList = moodleService.fetchUsers();
 
     if (moodleUsersList != null)
     {
       moodleUsersMap.clear();
       moodleUsersList.
         forEach(user -> moodleUsersMap.put(user.getUsername(), user));
+      LOGGER.debug("got " + moodleUsersMap.size() + " moodle users");           
     }
   }
 
@@ -180,12 +181,12 @@ public class MoodleHandler
   
     
 
-
+/*
   public Collection<MoodleUser> getMoodleUsersList()
   {
     return moodleUsersMap.values();
   }
-  
+  */
   // avoid redundancy
   // @Getter
   // private List<MoodleUser> moodleUsersList;

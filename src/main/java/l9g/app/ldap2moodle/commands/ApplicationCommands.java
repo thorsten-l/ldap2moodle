@@ -95,15 +95,15 @@ public class ApplicationCommands
     LOGGER.info( "*** DELETE USERS");
     
     ldapHandler.readAllLdapEntryUIDs();
-    for (MoodleUser user : moodleHandler.getMoodleUsersList())
+    moodleHandler.getMoodleUsersMap().forEach( ( key, user ) ->
     {
-      if (!ldapHandler.getLdapEntryMap().containsKey(user.getUsername()))
-      {            
+      if( !ldapHandler.getLdapEntryMap().containsKey( user.getUsername() ) )
+      {
         // moodle user does not exist in ldap user list
         // => suspend in moodle        
-        moodleHandler.suspendUser(user);        
+        moodleHandler.suspendUser( user );
       }
-    }
+    } );
 
     ///////////////////////////////////////////////////////////////////////////
     ASN1GeneralizedTime timestamp;

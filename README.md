@@ -15,6 +15,16 @@ Create, update and delete moodle user entries from a selected LDAP directory ser
 
 https://docs.moodle.org/403/en/Using_web_services
 
+The following webservice commands need to be enabled: 
+
+* core_user_get_users
+* core_user_create_users
+* core_user_update_users
+
+## Configuration
+
+
+
 ## LDAP to Moodle attribute mapping
 
 The mapping will be done within a JavaScript function.

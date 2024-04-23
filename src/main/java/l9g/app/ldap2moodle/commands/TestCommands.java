@@ -55,7 +55,7 @@ public class TestCommands
   @Autowired
   private MoodleService moodleService;
 
-  @Command(alias = "t1", description = "test javascipt file with ldap data")
+  @Command(alias = "t-ldap", description = "test javascipt file with ldap data")
   public void testJavaScript() throws Throwable
   {
     ldapHandler.readLdapEntries(new ASN1GeneralizedTime(0), true);
@@ -115,14 +115,18 @@ public class TestCommands
       "This is a test notification INFO mail.");
   }
 
-  @Command(alias = "t4", description = "read all moodle users")
+  @Command(alias = "t-moodle", description = "read all moodle users")
   public void testReadAllMoodleUsers() throws Throwable
   {
     logbackConfig.getL9gLogger().setLevel(Level.DEBUG);
     LOGGER.debug("testReadAllMoodleUsers");
     moodleHandler.readMoodleUsers();
-    moodleHandler.getMoodleUsersList()
-      .forEach(entry -> System.out.println(entry.toString()));
+    moodleHandler.getMoodleUsersMap().forEach( 
+      (key, entry) -> System.out.println(entry.toString()) 
+    );
+    LOGGER.info("got " + moodleHandler.getMoodleUsersMap().size() + " moodle users");     
+/*    moodleHandler.getMoodleUsersList()t-moodle
+      .forEach(entry -> System.out.println(entry.toString()));*/
   }
   
   
@@ -141,11 +145,11 @@ public class TestCommands
     dummy.setDepartment( "maths");
     dummy.setIdnumber("12345678");    
 
-/*
+
     dummy.addCustomField("faculty2", "biology");
     dummy.addCustomField("ou", "maths");
     dummy.addCustomField("employeetype", "student");
-  */
+  
     moodleHandler.createUser( dummy );
   }
   

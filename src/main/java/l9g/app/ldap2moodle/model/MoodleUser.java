@@ -85,8 +85,11 @@ public class MoodleUser
   List<CustomField> customfields = new LinkedList<>();
 //  private Map<String, String> customfields = new HashMap<>();
 
-  public void addCustomField( CustomField field )
+  public void addCustomField( String shortname, String value )
   {
+    CustomField field = new CustomField();
+    field.setShortname( shortname );
+    field.setValue( value );
     // Todo: check if shortname is already in list
     customfields.add( field );
   }

@@ -165,7 +165,6 @@ public class MoodleService
         .accept( MediaType.APPLICATION_JSON )
       .exchangeToMono( response ->
       {
-        LOGGER.info( response.toString() );
         if( response.statusCode().equals( HttpStatus.OK ) )
         {
           return response.bodyToMono( String.class );
@@ -187,7 +186,6 @@ public class MoodleService
         .accept( MediaType.APPLICATION_JSON )
       .exchangeToMono( response -> // use flux here for handling large response ???
       {
-        LOGGER.info( response.toString() );
         if( response.statusCode().equals( HttpStatus.OK ) )
         {
           return response.bodyToMono( String.class );
@@ -227,11 +225,11 @@ public class MoodleService
       GetUsersResponse usersResponse = objectMapper.readValue(body, GetUsersResponse.class);
       LOGGER.info(usersResponse.users.toString());
           
-/*      result = usersResponse.users();
-      if (!usersResponse.warnings().length)
+      result = usersResponse.users();
+      if (usersResponse.warnings().size() > 0)
       {
         LOGGER.warn( "warning avaiable for users (on core_user_get_users)" );        
-      }*/
+      }
     }
     catch(JsonProcessingException e)
     {
@@ -299,12 +297,12 @@ public class MoodleService
 
       AtomicInteger index = new AtomicInteger( 0 );
       AtomicInteger userIndex = new AtomicInteger( i );
-/*      user.getCustomfields().forEach( ( key, value ) ->
+      user.getCustomfields().forEach( field ->
       {
         int j = index.getAndIncrement();
-        data.put( "users[" + userIndex.get() + "][customfields][" + j + "][type]", key );
-        data.put( "users[" + userIndex.get() + "][customfields][" + j + "][value]", value );
-      } );*/
+        data.put( "users[" + userIndex.get() + "][customfields][" + j + "][type]", field.getShortname() );
+        data.put( "users[" + userIndex.get() + "][customfields][" + j + "][value]", field.getValue() );
+      } );
     }
 /*
       NodeList elements=MoodleCallRestWebService.call(data.toString());
