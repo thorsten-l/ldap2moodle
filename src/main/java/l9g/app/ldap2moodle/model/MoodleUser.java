@@ -23,6 +23,8 @@ import lombok.ToString;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -62,25 +64,25 @@ public class MoodleUser
 
   private String lang;
 
-  private String theme;
+//  private String theme;
 
-  private String timezone;
+//  private String timezone;
 
-  private Integer firstaccess;
+//  private Integer firstaccess; // needed?
 
-  private Integer lastaccess;
+//  private Integer lastaccess; // needed?
   
-  private Integer mailformat;
+//  private Integer mailformat;
 
-  private String description;
+//  private String description;
 
-  private Integer descriptionformat;
+//  private Integer descriptionformat;
 
   private String country;
 
-  private String profileimageurlsmall;
+//  private String profileimageurlsmall;
 
-  private String profileimageurl;
+//  private String profileimageurl;
 
   List<CustomField> customfields = new LinkedList<>();
 //  private Map<String, String> customfields = new HashMap<>();
@@ -94,37 +96,84 @@ public class MoodleUser
     customfields.add( field );
   }
 
+  public String getCustomField( String shortname )
+  {
+    for (CustomField field: customfields)
+    {
+      if (field.getShortname().equals( shortname ))
+      {
+        return field.getValue();
+      }
+    }
+    return null;
+  }
 
+  
   /**
    * creates a new MoodleUsr object with all values set to null except for the differences
    * @param ldapUser
    * @return new MoodleUser object
+   * @throws java.lang.IllegalAccessException
    */
-  public MoodleUser diff(MoodleUser ldapUser) throws IllegalAccessException
+  public MoodleUser diff( MoodleUser ldapUser )
+    throws IllegalAccessException
   {
     MoodleUser diffUser = new MoodleUser();
     boolean diffFound = false;
 
     Field[] fields = this.getClass().getDeclaredFields();
-    for (Field field : fields) {
+    for( Field field : fields )
+    {
       // String name = field.getName();
 //      if (!"customfields".equals(field.getName())) {
-        // handle field that is no custom field:
-        // make member public :-)
-        // field.setAccessible(true);
-        // get value
-        if (field.get(ldapUser) != field.get(this)) {
+      // handle field that is no custom field:
+      // make member public :-)
+      // field.setAccessible(true);
+      // get value
+//        System.out.println("LDAP: " + field.get(ldapUser).toString());
+//        System.out.println("LDAP: " + field.get(this).toString());
+      if( !"customfields".equals( field.getName() ) )
+      {
+        if( field.get( ldapUser ) != field.get( this ) )
+        {
           diffFound = true;
-          field.set(diffUser, field.get(ldapUser));
+          field.set( diffUser, field.get( ldapUser ) );
           // make member private again
           // field.setAccessible(false);
         }
-//      }
+      } else {
+        // Customfield handling
+        
+        // 1. iterate through our fields
+        for (CustomField cf: this.customfields)
+        {
+          if (!this.getCustomField( cf.getShortname() ).equals( ldapUser.getCustomField( cf.getShortname() ) ))
+          {
+            diffFound = true;
+            diffUser.addCustomField(cf.getShortname(), ldapUser.getCustomField( cf.getShortname() ));
+          }
+        }
+        
+        // 2. iterate through other fields, handle only custom fields
+        // that only exist in LDAP
+        for (CustomField cf: ldapUser.customfields)
+        {
+          if (this.getCustomField( cf.getShortname() ) != null)
+          {
+            continue;
+          }
+          
+          diffFound = true;
+          diffUser.addCustomField(cf.getShortname(), ldapUser.getCustomField( cf.getShortname() ));
+        }                        
+      }
     }
-    if (diffFound)
+    
+    if( diffFound )
     {
-      diffUser.setId(this.id);
+      diffUser.setId( this.id );
     }
-    return diffFound?diffUser:null;
+    return diffFound ? diffUser : null;
   }
+  
 }

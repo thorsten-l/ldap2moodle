@@ -162,13 +162,18 @@ public class TestCommands
     LOGGER.debug("testUpdateDummy");
     
     MoodleUser user = moodleHandler.getMoodleUsersMap().get( "susismith" );
+    MoodleUser ldapUser = new MoodleUser();
+    ldapUser.setId( user.getId());
+    ldapUser.setLastname( user.getLastname());
+    ldapUser.setFirstname( user.getFirstname());
+    ldapUser.addCustomField( "faculty2", user.getCustomField("faculty2"));
     
     Random rand = new Random();
-    int randomIdnumer = rand.nextInt(999999);
-    
-    user.setIdnumber( String.valueOf( randomIdnumer) );    
-      
-    moodleHandler.updateUser( user );
+    int randomIdnumer = rand.nextInt(999999);    
+    ldapUser.setIdnumber( String.valueOf( randomIdnumer) );    
+         
+    MoodleUser diffUser = user.diff( ldapUser );
+    moodleHandler.updateUser( diffUser );
   }
 
   @Command(alias = "t-suspend", description = "suspend the dummy user")

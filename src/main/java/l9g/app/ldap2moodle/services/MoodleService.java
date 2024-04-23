@@ -262,11 +262,6 @@ public class MoodleService
       {
         throw new MoodleRestException( MoodleRestException.USER_NULL );
       }
-      if( user.getUsername() == null )
-      {
-        throw new MoodleRestException( MoodleRestException.USERNAME_NULL );
-      }
-
       // get fields via Reflection API
       Field[] fields = user.getClass().getDeclaredFields();
       for( Field field : fields )
@@ -303,6 +298,7 @@ public class MoodleService
         data.put( "users[" + userIndex.get() + "][customfields][" + j + "][type]", field.getShortname() );
         data.put( "users[" + userIndex.get() + "][customfields][" + j + "][value]", field.getValue() );
       } );
+
     }
 /*
       NodeList elements=MoodleCallRestWebService.call(data.toString());
