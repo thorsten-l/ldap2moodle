@@ -174,4 +174,14 @@ public class ApplicationCommands
     logbackConfig.getRootLogger().setLevel(Level.INFO);
     logbackConfig.getL9gLogger().setLevel(Level.INFO);
   }
+  
+  
+    @Command(description = "help")
+  public void help(
+  ) throws Throwable
+  {
+    // todo
+    // LOGGER.info("usage: sync...");
+    System.out.print( "usage: sync..." ); 
+  }
 }
